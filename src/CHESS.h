@@ -2,10 +2,16 @@
 #define CHESS_H_
 #include <stdbool.h>
 
+const int BLACK = 0;
+const int WHITE = 1;
+const char EMPTY = '_';
+///////////////////// game default settings
 
+int DIFF = 2;
+int PLAYERS = 1;
+int USER_COLOR = 1; // white begins
 
-
-
+/////////////////////
 
 typedef enum {
 	SET_GAME_MODE,
@@ -29,15 +35,12 @@ typedef enum {
 	GAME_INVALID_LINE,
 } GAME_COMMAND;
 
-
 typedef struct game_command_t {
 	GAME_COMMAND cmd;
 	bool validArg; //is set to true if the line contains a valid argument
 	int arg1;
 	int arg2;
 } GameCommand;
-
-
 
 GameCommand game_parse(const char* str);
 
@@ -49,28 +52,44 @@ typedef struct command_t {
 } SetCommand;
 
 /**
-checks if 2 strings are equal
-@param s1- first string to check
-@param s2- second string to check
-@return
-false if by some character the strings differ
-true if they are exactly the same
-*/
-bool equalStrings(const char* s1,const char *s2);
+ checks if 2 strings are equal
+ @param s1- first string to check
+ @param s2- second string to check
+ @return
+ false if by some character the strings differ
+ true if they are exactly the same
+ */
+bool equalStrings(const char* s1, const char *s2);
 SetCommand setting_parse(const char* str);
 SET_COMMAND game_settings();
 
 typedef struct game_t {
 	char gameBoard[8][8];
-	char currentPlayer;
+	int currentPlayer;
 	int historySize;
 	int* boardHistory;
 	int saves;
 } Game;
 
 void printBoard(Game* g);
-void getValidMoves(Game* g, int arg, int* validMoves);
+int getValidMoves(Game* g, int arg, int* validMoves);
 bool isWhite(char);
 bool isBlack(char);
-bool isEmpty(char);
+bool isEmpty(Game*, int, int);
+bool isConquerable(Game * g, int row, int col, int color);
+void makeMove(Game * g, int arg1, int arg2);
+int appendPawnMoves(Game *g, int row, int col, int* moves, int i);
+int appendRookMoves(Game *g, int row, int col, int* moves, int i);
+int appendBishopMoves(Game *g, int row, int col, int* moves, int i);
+int appendKnightMoves(Game *g, int row, int col, int* moves, int i);
+int appendKingMoves(Game *g, int row, int col, int* moves, int i);
+int appendMoveIfEmpty(Game* g, int row, int col, int * moves, int i);
+int appendMoveIfConquerable(Game* g, int row, int col, int color, int * moves,
+		int i);
+int appendMoveIfEmptyOrConquerable(Game* g, int row, int col, int color,
+		int * moves, int i);
+int getNextWord(const char * s, char * word);
+void resetGame(Game * g);
+GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
+bool isGameTied(Game* g);
 #endif

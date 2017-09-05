@@ -23,56 +23,127 @@ int main(int argc, char *argv[]) {
 		printf("graphical mode unsupported yet.");
 		return 0;
 	}
-	SET_COMMAND cmd = game_settings();
-	GameCommand move;
-	if (cmd == SET_START) {
-		printf("LET THE GAME BEGIN!");
-		Game * g = (Game*) calloc(1, sizeof(Game));
-		char * moveStr = (char*) calloc(1024, sizeof(char));
-		g->currentPlayer = 'W';
-		char arr[64] = { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R', 'P', 'P', 'P',
-				'P', 'P', 'P', 'P', 'P', '_', '_', '_', '_', '_', '_', '_', '_',
-				'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_',
-				'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', 'p', 'p',
-				'p', 'p', 'p', 'p', 'p', 'p', 'r', 'n', 'b', 'q', 'k', 'b', 'n',
-				'r', };
-		int x = 0;
-		for (x = 0; x <= 63; x++) {
-			g->gameBoard[x / 8][x % 8] = arr[x];
+	char * moveStr = (char*) calloc(1024, sizeof(char));
+	GAME_COMMAND gameCmd = GAME_MOVE;
+	SET_COMMAND setCmd;
+	Game * g = (Game*) calloc(1, sizeof(Game));
+	resetGame(g);
+	while (true) {
+		if ((gameCmd == GAME_QUIT) || (setCmd == SET_QUIT)) {
+			printf("Exiting...\n");
+			return 0;
+		} else if ((setCmd == SET_START) && gameCmd != GAME_RESET) {
+			if (PLAYERS == 1) {
+				printf("unsupported yet");
+				return 0;
+			}
+			if (isGameTied(g)) {
+				printf("The game is tied\n");
+				return 0;
+			}
+			int check = isGameChecked(g);
+			if (check==WHITE){
+				printf("Check: white King is threatend!\n");
+			}
+			if (check==BLACK){
+				printf("Check: black King is threatend!\n");
+			}
+			gameCmd = twoPlayersGame(g, moveStr);
+		} else if (gameCmd == GAME_RESET) {
+			printf("Restarting...\n");
+			resetGame(g);
+			gameCmd = GAME_MOVE;
+			setCmd = game_settings();
+		} else {
+			setCmd = game_settings();
 		}
-
-		while (true) {
-			printBoard(g);
-			if (g->currentPlayer == 'W')
-				printf("White player - enter your move:\n");
-			else
-				printf("Black player - enter your move:\n");
-			fgets(moveStr, 1024, stdin);
-			move = game_parse(moveStr);
-			if (move.cmd == GAME_MOVE && move.validArg) {
-				int row1 = move.arg1 / 8;
-				int row2 = move.arg2 / 8;
-				int col1 = move.arg1 % 8;
-				int col2 = move.arg2 % 8;
-				char piece = g->gameBoard[row1][col1];
-				if ((g->currentPlayer == 'W') && (piece >= 'A')
-						&& (piece <= 'Z')) {
-					makeMove(g, move.arg1, move.arg2);
-
-				} else if (g->currentPlayer == 'B' && piece >= 'a'
-						&& piece <= 'z') {
-				} else
-					printf(
-							"The specified position does not contain your piece\n");
-			} else
-				printf("Invalid position on the board\n");
-		}
-
 	}
-	if (cmd == SET_QUIT) {
-		printf("QUIT THE GAME!");
-	}
+
 	return 0;
+}
+
+
+int isGameChecked(Game* g) {
+	int a = 0;
+	int moves[64];
+	for (a = 0; a < 64; a++) {
+		if (g->currentPlayer == WHITE) {
+			if (isWhite(g->gameBoard[a / 8][a % 8])	&& (getValidMoves(g, a, moves) > 0)) {
+				return false;
+			}
+		} else {
+			if (isWhite(g->gameBoard[a / 8][a % 8])
+					&& (getValidMoves(g, a, moves) > 0)) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+bool isGameTied(Game* g) {
+	int a = 0;
+	int moves[64];
+	for (a = 0; a < 64; a++) {
+
+		if (g->currentPlayer == WHITE) {
+			if (isWhite(g->gameBoard[a / 8][a % 8])	&& (getValidMoves(g, a, moves) > 0)) {
+				return false;
+			}
+		} else {
+			if (isWhite(g->gameBoard[a / 8][a % 8])
+					&& (getValidMoves(g, a, moves) > 0)) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
+	GameCommand move;
+	printBoard(g);
+	if (g->currentPlayer == WHITE)
+		printf("White player - enter your move:\n");
+	else
+		printf("Black player - enter your move:\n");
+	fgets(moveStr, 1024, stdin);
+	move = game_parse(moveStr);
+	if (move.cmd == GAME_MOVE) {
+		if (move.validArg) {
+			int row1 = move.arg1 / 8;
+			int col1 = move.arg1 % 8;
+			char piece = g->gameBoard[row1][col1];
+			if (g->currentPlayer == WHITE && isWhite(piece)) {
+				makeMove(g, move.arg1, move.arg2);
+				g->currentPlayer = BLACK;
+
+			} else if (g->currentPlayer == BLACK && isBlack(piece)) {
+				makeMove(g, move.arg1, move.arg2);
+				g->currentPlayer = WHITE;
+
+			} else {
+				printf("The specified position does not contain your piece\n");
+			}
+		} else {
+			printf("Invalid position on the board\n");
+		}
+
+	}
+	return move.cmd;
+}
+
+void resetGame(Game * g) {
+	g->currentPlayer = WHITE;
+	char arr[64] = { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'm', 'm', 'm', 'm',
+			'm', 'm', 'm', 'm', '_', '_', '_', '_', '_', '_', '_', '_', '_',
+			'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_',
+			'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', 'M', 'M', 'M',
+			'M', 'M', 'M', 'M', 'M', 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R', };
+	int x = 0;
+	for (x = 0; x <= 63; x++) {
+		g->gameBoard[x / 8][x % 8] = arr[x];
+	}
 }
 
 void makeMove(Game * g, int arg1, int arg2) {
@@ -88,10 +159,9 @@ void makeMove(Game * g, int arg1, int arg2) {
 		validMoves[j] = -1;
 	getValidMoves(g, arg1, validMoves);
 	for (j = 0; j < 64; j++) {
-		if (validMoves[j] == arg2)
-		{
+		if (validMoves[j] == arg2) {
 			break;
-			printf("%d",j);
+			printf("%d", j);
 		}
 	}
 	if (validMoves[j] == arg2) {
@@ -101,122 +171,223 @@ void makeMove(Game * g, int arg1, int arg2) {
 		printf("Illegal move\n");
 }
 
-void getValidMoves(Game* g, int arg, int* validMoves) {
+int getValidMoves(Game* g, int arg, int* moves) {
 	char piece = g->gameBoard[arg / 8][arg % 8];
 	int i = 0;
 	int row = arg / 8;
 	int col = arg % 8;
-	if (g->currentPlayer == 'W') {
-		if (piece == 'P') {
-			if ((row == 1) && isEmpty(g->gameBoard[row + 2][col])) {
-				validMoves[i] = arg + 16;
-				i++;
-			}
-			if ((row <= 6) && isEmpty(g->gameBoard[row + 1][col])) {
-				validMoves[i] = arg + 8;
-				i++;
-			}
-			if ((col < 7) && (row < 7)
-					&& isBlack(g->gameBoard[1 + row][col + 1])) {
-				validMoves[i] = arg + 9;
-				i++;
-			}
-			if ((col > 0) && (row < 7)
-					&& isBlack(g->gameBoard[1 + row][col - 1])) {
-				validMoves[i] = arg + 7;
-				i++;
-			}
-		}
-		if (piece == 'R') {
-			//UP
-			int j = row+1;
-			while (j > 0) {
-				if (isWhite(g->gameBoard[j][col]))
-					break;
-
-				validMoves[i] = col + 8 * j;
-				i++;
-
-				if (isBlack(g->gameBoard[j][col]))
-					break;
-				j++;
-
-			}
-			//Down
-			j = row-1;
-			while (j < 8) {
-				if (isWhite(g->gameBoard[j][col]))
-					break;
-
-				validMoves[i] = col + 8 * j;
-				i++;
-
-				if (isBlack(g->gameBoard[j][col]))
-					break;
-				j--;
-
-			}
-			j = col+1; //right
-			while (j < 8) {
-				if (isWhite(g->gameBoard[row][j]))
-					break;
-
-				validMoves[i] = 8 * row + j;
-				i++;
-
-				if (isBlack(g->gameBoard[row][j]))
-					break;
-				j++;
-
-			}
-			j = col-1;
-			while (j < 8) {
-				if (isWhite(g->gameBoard[row][j]))
-					break;
-
-				validMoves[i] = 8 * row + j;
-				i++;
-
-				if (isBlack(g->gameBoard[row][j]))
-					break;
-				j--;
-
-			}
-		}
-		if (piece == 'N') {
-		}
-		if (piece == 'K') {
-		}
-		if (piece == 'Q') {
-		}
-		if (piece == 'B') {
-		}
-	} else {
+	switch (piece) {
+	case 'M':
+	case 'm':
+		i = appendPawnMoves(g, row, col, moves, i);
+		break;
+	case 'R':
+	case 'r':
+		i = appendRookMoves(g, row, col, moves, i);
+		break;
+	case 'N':
+	case 'n':
+		i = appendKnightMoves(g, row, col, moves, i);
+		break;
+	case 'k':
+	case 'K':
+		i = appendKingMoves(g, row, col, moves, i);
+		break;
+	case 'Q':
+	case 'q':
+		i = appendRookMoves(g, row, col, moves, i); //rook here intentionally queen is rook+bishop
+		i = appendBishopMoves(g, row, col, moves, i);
+		break;
+	case 'b':
+	case 'B':
+		i = appendBishopMoves(g, row, col, moves, i);
+		break;
 	}
+	return i;
 }
 
-bool isWhite(char c) {
-	return (c >= 'A') && (c <= 'Z');
+int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
+	char color = BLACK;
+	if (isWhite(g->gameBoard[row][col]))
+		color = WHITE;
+	if (color == WHITE) {
+		// first white Pawn move
+		if (row == 1)
+			i = appendMoveIfEmpty(g, row + 2, col, moves, i);
+		//regular white pawn move
+		i = appendMoveIfEmpty(g, row + 1, col, moves, i);
+		// white pawn right capture
+		i = appendMoveIfConquerable(g, row + 1, col + 1, color, moves, i);
+		//white pawn left capture
+		i = appendMoveIfConquerable(g, row + 1, col - 1, color, moves, i);
+	} else {
+		// first black Pawn move
+		if (row == 6)
+			i = appendMoveIfEmpty(g, row - 2, col, moves, i);
+		//regular black pawn move
+		i = appendMoveIfEmpty(g, row - 1, col, moves, i);
+		// black pawn right capture
+		i = appendMoveIfConquerable(g, row - 1, col + 1, color, moves, i);
+		// black pawn left capture
+		i = appendMoveIfConquerable(g, row - 1, col - 1, color, moves, i);
+
+	}
+	return i;
+}
+int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
+	char color = BLACK;
+	if (isWhite(g->gameBoard[row][col]))
+		color = WHITE;
+//rook UP
+	int j = 1;
+	while (appendMoveIfEmpty(g, row + j, col, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row + j, col, color, moves, i);
+//Down
+	j = 1;
+	while (appendMoveIfEmpty(g, row - j, col, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row - j, col, color, moves, i);
+//right
+	j = 1;
+	while (appendMoveIfEmpty(g, row, col + j, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row, col + j, color, moves, i);
+// left
+	j = 1;
+	while (appendMoveIfEmpty(g, row, col - j, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row, col - j, color, moves, i);
+	return i;
+}
+
+int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
+	char color = BLACK;
+	if (isWhite(g->gameBoard[row][col]))
+		color = WHITE;
+//up right
+	int j = 1;
+	while (appendMoveIfEmpty(g, row + j, col + j, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row + j, col + j, color, moves, i);
+//down left
+	j = 1;
+	while (appendMoveIfEmpty(g, row - j, col - j, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row - j, col - j, color, moves, i);
+//up left
+	j = 1;
+	while (appendMoveIfEmpty(g, row + j, col - j, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row + j, col - j, color, moves, i);
+//down right
+	j = 1;
+	while (appendMoveIfEmpty(g, row - j, col + j, moves, i) > i) {
+		i++;
+		j++;
+	}
+	i = appendMoveIfConquerable(g, row - j, col + j, color, moves, i);
+	return i;
+}
+
+int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
+	char color = BLACK;
+	if (isWhite(g->gameBoard[row][col]))
+		color = WHITE;
+	i = appendMoveIfEmptyOrConquerable(g, row + 2, col - 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row + 2, col + 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row + 1, col + 2, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row - 1, col + 2, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row - 2, col - 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row - 2, col + 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row + 1, col - 2, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row - 1, col - 2, color, moves, i);
+	return i;
+}
+int appendKingMoves(Game *g, int row, int col, int* moves, int i) {
+	char color = BLACK;
+	if (isWhite(g->gameBoard[row][col]))
+		color = WHITE;
+	i = appendMoveIfEmptyOrConquerable(g, row + 1, col, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row + 1, col + 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row, col + 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row - 1, col + 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row - 1, col, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row - 1, col - 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row, col - 1, color, moves, i);
+	i = appendMoveIfEmptyOrConquerable(g, row + 1, col - 1, color, moves, i);
+	return i;
+}
+int appendMoveIfEmpty(Game* g, int row, int col, int * moves, int i) {
+	if (isEmpty(g, row, col)) {
+		moves[i] = 8 * row + col;
+		return i + 1;
+	}
+	return i;
+}
+int appendMoveIfConquerable(Game* g, int row, int col, int color, int * moves,
+		int i) {
+	if (isConquerable(g, row, col, color)) {
+		moves[i] = 8 * row + col;
+		return i + 1;
+	}
+	return i;
+}
+int appendMoveIfEmptyOrConquerable(Game* g, int row, int col, int color,
+		int * moves, int i) {
+	i = appendMoveIfEmpty(g, row, col, moves, i);
+	i = appendMoveIfConquerable(g, row, col, color, moves, i);
+	return i;
+}
+bool isColor(char c, int color) {
+	return ((isWhite(c) && (color == WHITE)) || (isBlack(c) && (color == BLACK)));
 }
 bool isBlack(char c) {
+	return (c >= 'A') && (c <= 'Z');
+}
+bool isWhite(char c) {
 	return (c >= 'a') && (c <= 'z');
 }
-bool isEmpty(char c) {
-	return c == '_';
+bool isEmpty(Game* g, int row, int col) {
+	if ((row < 8) && (row >= 0) && (col >= 0) && (col < 8)) {
+		return g->gameBoard[row][col] == '_';
+	} else
+		return false;
+}
+bool isConquerable(Game * g, int row, int col, int color) {
+	if ((row < 8) && (row >= 0) && (col >= 0) && (col < 8)) {
+		char curr = g->gameBoard[row][col];
+		//if ((curr == 'K') || (curr == 'k'))
+		//	return false;
+		return ~isColor(curr, color);
+	} else
+		return false;
+}
+bool isEmptyOrConquerable(Game* g, int row, int col, int color) {
+	return isEmpty(g, row, col) || isConquerable(g, row, col, color);
 }
 SET_COMMAND game_settings() {
-///////////////////// game default settings
 
-	int difficulty = 2;
-	int players = 1;
-	int color = 1; // 1 is white
-
-/////////////////////
 	SetCommand sp;
 	char * string = (char*) calloc(1024, sizeof(char));
+	printf(
+			"Specify game setting or type 'start' to begin a game with the current setting:\n");
 	while (true) {
-		printf(
-				"Specify game setting or type 'start' to begin a game with the current setting:\n");
+
 		fgets(string, 1024, stdin);
 		sp = setting_parse(string);
 		if (sp.cmd == SET_INVALID_LINE) {
@@ -224,16 +395,50 @@ SET_COMMAND game_settings() {
 		if (sp.cmd == SET_START) {
 			return sp.cmd;
 		}
+		if (sp.cmd == SET_GAME_MODE) {
+			if (sp.validArg) {
+				if (sp.arg == 1) {
+					PLAYERS = 1;
+					printf("Game mode is set to 1 player\n");
+
+				} else {
+					PLAYERS = 2;
+					printf("Game mode is set to 2 players\n");
+				}
+			} else {
+				printf("Wrong game mode\n");
+			}
+		}
+		if ((sp.cmd == SET_DIFFICULTY) && (PLAYERS == 1)) {
+			if (sp.validArg) {
+				if (sp.arg == 5) {
+					printf(
+							"Expert level not supported, please choose a value between 1 to 4:\n");
+				} else {
+					DIFF = sp.arg;
+				}
+			} else
+				printf(
+						"Wrong difficulty level. The value should be between 1 to 5\n");
+		}
+		if ((sp.cmd == SET_USER_COLOR) && (PLAYERS == 1) && (sp.validArg)) {
+			USER_COLOR = sp.arg;
+		}
+		if (sp.cmd == SET_DEFAULT) {
+			USER_COLOR = 1;
+			DIFF = 2;
+			PLAYERS = 1;
+		}
 		if (sp.cmd == SET_QUIT) {
 			return sp.cmd;
 		}
 		if (sp.cmd == SET_PRINT_SETTING) {
-			if (players == 1) {
+			if (PLAYERS == 1) {
 				printf("SETTINGS:\nGAME_MODE: 1\n");
 			} else {
 				printf(
 						"SETTINGS:\nGAME_MODE: 2\nDIFFICULTY_LVL: %d\nUSER_CLR: %d\n",
-						difficulty, color);
+						DIFF, USER_COLOR);
 			}
 		}
 	}
@@ -241,13 +446,12 @@ SET_COMMAND game_settings() {
 }
 
 SetCommand setting_parse(const char* str) {
-	char argStr[30];
-	char cmdStr[1024];
-	for (int a = 0; a < 30; a++)
-		argStr[a] = 0;
-	for (int a = 0; a < 1024; a++)
-		cmdStr[a] = 0;
-	int arg;
+	char w1[30];
+	char w2[30];
+	for (int a = 0; a < 30; a++) {
+		w1[a] = 0;
+		w2[a] = 0;
+	}
 	SetCommand sp;
 	SET_COMMAND cmd = SET_INVALID_LINE;
 	char *s1 = "game_mode";
@@ -258,25 +462,38 @@ SetCommand setting_parse(const char* str) {
 	char *s6 = "print_setting";
 	char *s7 = "quit";
 	char *s8 = "start";
-
-	int index = getNextWord(str, cmdStr);
+	int index = getNextWord(str, w1);
 	sp.validArg = false;
-	index = getNextWord(&str[index], argStr);
-	if (equalStrings(cmdStr, s1)) {
+	index += getNextWord(&str[index], w2);
+	if (equalStrings(w1, s1)) {
 		cmd = SET_GAME_MODE;
-	} else if (equalStrings(cmdStr, s2)) {
+		if (equalStrings(w2, "1") || equalStrings(w2, "2")) {
+			sp.validArg = true;
+			sp.arg = w2[0] - '0';
+		}
+	} else if (equalStrings(w1, s2)) {
+		if (equalStrings(w2, "1") || equalStrings(w2, "2")
+				|| equalStrings(w2, "3") || equalStrings(w2, "4")
+				|| equalStrings(w2, "5")) {
+			sp.validArg = true;
+			sp.arg = w2[0] - '0';
+		}
 		cmd = SET_DIFFICULTY;
-	} else if (equalStrings(cmdStr, s3)) {
+	} else if (equalStrings(w1, s3)) {
 		cmd = SET_USER_COLOR;
-	} else if (equalStrings(cmdStr, s4)) {
+		if (equalStrings(w2, "1") || equalStrings(w2, "0")) {
+			sp.validArg = true;
+			sp.arg = w2[0] - '0';
+		}
+	} else if (equalStrings(w1, s4)) {
 		cmd = SET_LOAD;
-	} else if (equalStrings(cmdStr, s5)) {
+	} else if (equalStrings(w1, s5)) {
 		cmd = SET_DEFAULT;
-	} else if (equalStrings(cmdStr, s6)) {
+	} else if (equalStrings(w1, s6)) {
 		cmd = SET_PRINT_SETTING;
-	} else if (equalStrings(cmdStr, s7)) {
+	} else if (equalStrings(w1, s7)) {
 		cmd = SET_QUIT;
-	} else if (equalStrings(cmdStr, s8)) {
+	} else if (equalStrings(w1, s8)) {
 		cmd = SET_START;
 	}
 	sp.cmd = cmd;
@@ -294,8 +511,6 @@ GameCommand game_parse(const char* str) {
 		w3[a] = 0;
 		w4[a] = 0;
 	}
-	int arg1;
-	int arg2;
 	GameCommand sp;
 	GAME_COMMAND cmd = GAME_INVALID_LINE;
 	char *s1 = "move";
@@ -384,23 +599,12 @@ bool equalStrings(const char * s1, const char * s2) {
 void printBoard(Game * g) {
 	int i;
 	int j;
-	if (g->currentPlayer == 'B') {
-		for (i = 1; i <= 8; i++) {
-			printf("\n%d| ", 9 - i);
-			for (j = 0; j < 8; j++)
-				printf("%c ", g->gameBoard[i - 1][j]);
-			printf("|");
-		}
-
-	} else {
-		for (i = 1; i <= 8; i++) {
-			printf("\n%d| ", 9 - i);
-			for (j = 0; j < 8; j++)
-				printf("%c ", g->gameBoard[8 - i][j]);
-			printf("|");
-		}
+	for (i = 1; i <= 8; i++) {
+		printf("\n%d| ", 9 - i);
+		for (j = 0; j < 8; j++)
+			printf("%c ", g->gameBoard[8 - i][j]);
+		printf("|");
 	}
-
 	printf("\n  -----------------\n");
 	printf("   A B C D E F G H\n");
 }
