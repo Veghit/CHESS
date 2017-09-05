@@ -42,11 +42,22 @@ int main(int argc, char *argv[]) {
 				return 0;
 			}
 			int check = isGameChecked(g);
-			if (check==WHITE){
-				printf("Check: white King is threatend!\n");
+			if (check == WHITE) {
+				if (currentLost(g)) {
+					printf("BLACK WON!");
+					return 0;
+				} else {
+					printf("Check: white King is threatend!\n");
+				}
 			}
-			if (check==BLACK){
-				printf("Check: black King is threatend!\n");
+			if (check == BLACK) {
+				if (currentLost(g)) {
+					printf("white wins the game");
+					return 0;
+				} else {
+					printf("Check: black King is threatend!\n");
+				}
+
 			}
 			gameCmd = twoPlayersGame(g, moveStr);
 		} else if (gameCmd == GAME_RESET) {
@@ -62,23 +73,51 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+bool currentLost(Game * g) {
+	return false;
+}
 
+// it there a CHECK?
 int isGameChecked(Game* g) {
 	int a = 0;
 	int moves[64];
-	for (a = 0; a < 64; a++) {
-		if (g->currentPlayer == WHITE) {
-			if (isWhite(g->gameBoard[a / 8][a % 8])	&& (getValidMoves(g, a, moves) > 0)) {
-				return false;
-			}
-		} else {
-			if (isWhite(g->gameBoard[a / 8][a % 8])
-					&& (getValidMoves(g, a, moves) > 0)) {
-				return false;
+	int king_index = -10;
+	if (g->currentPlayer == WHITE) {
+		for (a = 0; a < 64; a++) {
+			if (g->gameBoard[a / 8][a % 8] == 'k') {
+				king_index = a;
+				break;
 			}
 		}
+		for (a = 0; a < 64; a++) {
+			if (isBlack(g->gameBoard[a / 8][a % 8])) {
+				int j = getValidMoves(g, a, moves);
+				for (int i = 0; i < j; i++) {
+					if (moves[i] == king_index)
+						return WHITE;
+				}
+			}
+		}
+
+	} else {
+		for (a = 0; a < 64; a++) {
+			if (g->gameBoard[a / 8][a % 8] == 'K') {
+				king_index = a;
+				break;
+			}
+		}
+		for (a = 0; a < 64; a++) {
+			if (isWhite(g->gameBoard[a / 8][a % 8])) {
+				int j = getValidMoves(g, a, moves);
+				for (int i = 0; i < j; i++) {
+					if (moves[i] == king_index)
+						return BLACK;
+				}
+			}
+		}
+
 	}
-	return true;
+	return -1;
 }
 
 bool isGameTied(Game* g) {
@@ -87,7 +126,8 @@ bool isGameTied(Game* g) {
 	for (a = 0; a < 64; a++) {
 
 		if (g->currentPlayer == WHITE) {
-			if (isWhite(g->gameBoard[a / 8][a % 8])	&& (getValidMoves(g, a, moves) > 0)) {
+			if (isWhite(g->gameBoard[a / 8][a % 8])
+					&& (getValidMoves(g, a, moves) > 0)) {
 				return false;
 			}
 		} else {
@@ -115,13 +155,18 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 			int col1 = move.arg1 % 8;
 			char piece = g->gameBoard[row1][col1];
 			if (g->currentPlayer == WHITE && isWhite(piece)) {
-				makeMove(g, move.arg1, move.arg2);
-				g->currentPlayer = BLACK;
+				if (-1!=makeMove(g, move.arg1, move.arg2)){
+					g->currentPlayer = BLACK;}
+				else{
+					printf("Illegal move\n");
+				}
 
 			} else if (g->currentPlayer == BLACK && isBlack(piece)) {
-				makeMove(g, move.arg1, move.arg2);
-				g->currentPlayer = WHITE;
-
+				if (-1!=makeMove(g, move.arg1, move.arg2)){
+					g->currentPlayer = BLACK;}
+				else{
+					printf("Illegal move\n");
+				}
 			} else {
 				printf("The specified position does not contain your piece\n");
 			}
@@ -146,7 +191,7 @@ void resetGame(Game * g) {
 	}
 }
 
-void makeMove(Game * g, int arg1, int arg2) {
+int makeMove(Game * g, int arg1, int arg2) {
 
 	int row1 = arg1 / 8;
 	int row2 = arg2 / 8;
@@ -168,7 +213,7 @@ void makeMove(Game * g, int arg1, int arg2) {
 		g->gameBoard[row1][col1] = '_';
 		g->gameBoard[row2][col2] = piece;
 	} else
-		printf("Illegal move\n");
+		return -1;
 }
 
 int getValidMoves(Game* g, int arg, int* moves) {

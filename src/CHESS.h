@@ -77,7 +77,7 @@ bool isWhite(char);
 bool isBlack(char);
 bool isEmpty(Game*, int, int);
 bool isConquerable(Game * g, int row, int col, int color);
-void makeMove(Game * g, int arg1, int arg2);
+int makeMove(Game * g, int arg1, int arg2);
 int appendPawnMoves(Game *g, int row, int col, int* moves, int i);
 int appendRookMoves(Game *g, int row, int col, int* moves, int i);
 int appendBishopMoves(Game *g, int row, int col, int* moves, int i);
@@ -92,4 +92,6 @@ int getNextWord(const char * s, char * word);
 void resetGame(Game * g);
 GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
 bool isGameTied(Game* g);
+int isGameChecked(Game* g);
+bool currentLost(Game * g);
 #endif
