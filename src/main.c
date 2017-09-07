@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
 			return 0;
 		}
 		else if ((setCmd == SET_START) && gameCmd != GAME_RESET) {
-			if (*PLAYERS == 1) {
+			if (setting.PLAYERS == 1) {
 				printf("unsupported yet");
 				return 0;
 			}
@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
 				return 0;
 			}
 			int check = isGameChecked(g);
-			if (check == *WHITE) {
+			if (check == setting.WHITE) {
 				if (currentLost(g)) {
 					printf("BLACK WON!");
 					return 0;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 					printf("Check: white King is threatend!\n");
 				}
 			}
-			if (check == *BLACK) {
+			if (check == setting.BLACK) {
 				if (currentLost(g)) {
 					printf("white wins the game");
 					return 0;

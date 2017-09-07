@@ -21,7 +21,7 @@ int isGameChecked(Game* g) {
 	int a = 0;
 	int moves[64];
 	int king_index = -10;
-	if (g->currentPlayer == (*WHITE)) {
+	if (g->currentPlayer == (setting.WHITE)) {
 		for (a = 0; a < 64; a++) {
 			if (g->gameBoard[a / 8][a % 8] == 'k') {
 				king_index = a;
@@ -33,7 +33,7 @@ int isGameChecked(Game* g) {
 				int j = getValidMoves(g, a, moves);
 				for (int i = 0; i < j; i++) {
 					if (moves[i] == king_index)
-						return (*WHITE);
+						return (setting.WHITE);
 				}
 			}
 		}
@@ -51,7 +51,7 @@ int isGameChecked(Game* g) {
 				int j = getValidMoves(g, a, moves);
 				for (int i = 0; i < j; i++) {
 					if (moves[i] == king_index)
-						return (*BLACK);
+						return (setting.BLACK);
 				}
 			}
 		}
@@ -60,7 +60,7 @@ int isGameChecked(Game* g) {
 	return -1;
 }
 bool isColor(char c, int color) {
-	return ((isWhite(c) && (color == (*WHITE))) || (isBlack(c) && (color == (*BLACK))));
+	return ((isWhite(c) && (color == setting.WHITE)) || (isBlack(c) && (color == setting.BLACK)));
 }
 
 bool isBlack(char c) {
@@ -75,7 +75,7 @@ bool isGameTied(Game* g) {
 	int moves[64];
 	for (a = 0; a < 64; a++) {
 
-		if (g->currentPlayer == (*WHITE)) {
+		if (g->currentPlayer == setting.WHITE) {
 			if (isWhite(g->gameBoard[a / 8][a % 8])
 				&& (getValidMoves(g, a, moves) > 0)) {
 				return false;
@@ -94,7 +94,7 @@ bool isGameTied(Game* g) {
 GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 	GameCommand move;
 	printBoard(g);
-	if (g->currentPlayer == (*WHITE))
+	if (g->currentPlayer == setting.WHITE)
 		printf("White player - enter your move:\n");
 	else
 		printf("Black player - enter your move:\n");
@@ -105,18 +105,18 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 			int row1 = move.arg1 / 8;
 			int col1 = move.arg1 % 8;
 			char piece = g->gameBoard[row1][col1];
-			if (g->currentPlayer == (*WHITE) && isWhite(piece)) {
+			if (g->currentPlayer == setting.WHITE && isWhite(piece)) {
 				if (-1 != makeMove(g, move.arg1, move.arg2)) {
-					g->currentPlayer = (*BLACK);
+					g->currentPlayer = setting.BLACK;
 				}
 				else {
 					printf("Illegal move\n");
 				}
 
 			}
-			else if (g->currentPlayer == (*BLACK) && isBlack(piece)) {
+			else if (g->currentPlayer == setting.BLACK && isBlack(piece)) {
 				if (-1 != makeMove(g, move.arg1, move.arg2)) {
-					g->currentPlayer = (*BLACK);
+					g->currentPlayer = setting.BLACK;
 				}
 				else {
 					printf("Illegal move\n");
@@ -135,7 +135,7 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 }
 
 void resetGame(Game * g) {
-	g->currentPlayer = (*WHITE);
+	g->currentPlayer = setting.WHITE;
 	char arr[64] = { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'm', 'm', 'm', 'm',
 		'm', 'm', 'm', 'm', '_', '_', '_', '_', '_', '_', '_', '_', '_',
 		'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_',
@@ -209,10 +209,10 @@ int getValidMoves(Game* g, int arg, int* moves) {
 }
 
 int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*BLACK);
+	char color = setting.BLACK;
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*WHITE);
-	if (color == (*WHITE)) {
+		color = setting.WHITE;
+	if (color == setting.WHITE) {
 		// first white Pawn move
 		if (row == 1)
 			i = appendMoveIfEmpty(g, row + 2, col, moves, i);
@@ -238,9 +238,9 @@ int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
 	return i;
 }
 int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*BLACK);
+	char color = setting.BLACK;
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*WHITE);
+		color = setting.WHITE;
 	//rook UP
 	int j = 1;
 	while (appendMoveIfEmpty(g, row + j, col, moves, i) > i) {
@@ -273,9 +273,9 @@ int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
 }
 
 int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*BLACK);
+	char color = setting.BLACK;
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*WHITE);
+		color = setting.WHITE;
 	//up right
 	int j = 1;
 	while (appendMoveIfEmpty(g, row + j, col + j, moves, i) > i) {
@@ -308,9 +308,9 @@ int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
 }
 
 int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*BLACK);
+	char color = setting.BLACK;
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*WHITE);
+		color = setting.WHITE;
 	i = appendMoveIfEmptyOrConquerable(g, row + 2, col - 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 2, col + 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col + 2, color, moves, i);
@@ -322,9 +322,9 @@ int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
 	return i;
 }
 int appendKingMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*BLACK);
+	char color = setting.BLACK;
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*WHITE);
+		color = setting.WHITE;
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col + 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row, col + 1, color, moves, i);

@@ -1,21 +1,21 @@
 #ifndef DefaultSettings_H_
 #define DefaultSettings_H_
 
-static int* const BLACK=0 ;
 
-static int* const WHITE =1;
+typedef struct settings {
 
-static char* const EMPTY='_';
+	int const BLACK;
+	int const WHITE;
+	char const EMPTY;
+	///////////////////// game default settings
 
-///////////////////// game default settings
+	int DIFF;
+	int PLAYERS;
+	int USER_COLOR; // white begins
 
-static int* DIFF =2;
+}settings;
 
-static int* PLAYERS=1 ;
+static settings setting = {0,1,'_',2,1,1};
 
-static int* USER_COLOR=1; // white begins
-
-
-					/////////////////////
 
 #endif// !DefaultSettings_H_

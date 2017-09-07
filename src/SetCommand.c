@@ -24,12 +24,12 @@ SET_COMMAND game_settings() {
 		if (sp.cmd == SET_GAME_MODE) {
 			if (sp.validArg) {
 				if (sp.arg == 1) {
-					*PLAYERS = 1;
+					setting.PLAYERS= 1;
 					printf("Game mode is set to 1 player\n");
 
 				}
 				else {
-					*PLAYERS = 2;
+					setting.PLAYERS = 2;
 					printf("Game mode is set to 2 players\n");
 				}
 			}
@@ -37,39 +37,39 @@ SET_COMMAND game_settings() {
 				printf("Wrong game mode\n");
 			}
 		}
-		if ((sp.cmd == SET_DIFFICULTY) && (*PLAYERS == 1)) {
+		if ((sp.cmd == SET_DIFFICULTY) && (setting.PLAYERS == 1)) {
 			if (sp.validArg) {
 				if (sp.arg == 5) {
 					printf(
 						"Expert level not supported, please choose a value between 1 to 4:\n");
 				}
 				else {
-					*DIFF = sp.arg;
+					setting.DIFF = sp.arg;
 				}
 			}
 			else
 				printf(
 					"Wrong difficulty level. The value should be between 1 to 5\n");
 		}
-		if ((sp.cmd == SET_USER_COLOR) && (*PLAYERS == 1) && (sp.validArg)) {
-			*USER_COLOR = sp.arg;
+		if ((sp.cmd == SET_USER_COLOR) && (setting.PLAYERS == 1) && (sp.validArg)) {
+			setting.USER_COLOR = sp.arg;
 		}
 		if (sp.cmd == SET_DEFAULT) {
-			*USER_COLOR = 1;
-			*DIFF = 2;
-			*PLAYERS = 1;
+			setting.USER_COLOR = 1;
+			setting.DIFF = 2;
+			setting.PLAYERS = 1;
 		}
 		if (sp.cmd == SET_QUIT) {
 			return sp.cmd;
 		}
 		if (sp.cmd == SET_PRINT_SETTING) {
-			if (*PLAYERS == 1) {
+			if (setting.PLAYERS == 1) {
 				printf("SETTINGS:\nGAME_MODE: 1\n");
 			}
 			else {
 				printf(
 					"SETTINGS:\nGAME_MODE: 2\nDIFFICULTY_LVL: %d\nUSER_CLR: %d\n",
-					*DIFF, *USER_COLOR);
+					setting.DIFF, setting.USER_COLOR);
 			}
 		}
 	}
