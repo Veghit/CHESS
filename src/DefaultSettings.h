@@ -17,5 +17,7 @@ typedef struct settings {
 
 static settings setting = {0,1,'_',2,1,1};
 
+static settings * stg = &setting;
+
 
 #endif// !DefaultSettings_H_

@@ -7,8 +7,8 @@
 
 
 /**
-@param str- receives a line from stdin
-@ret
+@param str- receives a line
+@ret- 
 
 */
 GameCommand game_parse(const char* str) {
