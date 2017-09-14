@@ -1,6 +1,8 @@
 #ifndef CHESS_H_
 #define CHESS_H_
+
 #include <stdbool.h>
+
 
 const int BLACK = 0;
 const int WHITE = 1;
@@ -73,8 +75,10 @@ typedef struct game_t {
 
 void printBoard(Game* g);
 int getValidMoves(Game* g, int arg, int* validMoves);
+
 bool isWhite(char);
 bool isBlack(char);
+
 bool isEmpty(Game*, int, int);
 bool isConquerable(Game * g, int row, int col, int color);
 int makeMove(Game * g, int arg1, int arg2);
@@ -88,7 +92,9 @@ int appendMoveIfConquerable(Game* g, int row, int col, int color, int * moves,
 		int i);
 int appendMoveIfEmptyOrConquerable(Game* g, int row, int col, int color,
 		int * moves, int i);
+
 int getNextWord(const char * s, char * word);
+
 void resetGame(Game * g);
 GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
 bool isGameTied(Game* g);

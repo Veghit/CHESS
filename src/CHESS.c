@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 	}
 	char * moveStr = (char*) calloc(1024, sizeof(char));
 	GAME_COMMAND gameCmd = GAME_MOVE;
-	SET_COMMAND setCmd;
+	SET_COMMAND setCmd=SET_INVALID_LINE;
 	Game * g = (Game*) calloc(1, sizeof(Game));
 	resetGame(g);
 	while (true) {
@@ -72,6 +72,9 @@ int main(int argc, char *argv[]) {
 
 	return 0;
 }
+/*
+/*
+what's the purpose of that?
 
 bool currentLost(Game * g) {
 	return false;
@@ -596,13 +599,13 @@ GameCommand game_parse(const char* str) {
 	return sp;
 }
 
-/**
+/*
  gets the next word
  @param s- the string from which the next word is taken
  @param word- an empty string in which the next word is written to
  @return
  the last index of s, from which the word was taken
- */
+ 
 int getNextWord(const char * s, char * word) {
 	int i = 0;
 	int j = 0;
@@ -621,14 +624,14 @@ int getNextWord(const char * s, char * word) {
 	return i;
 }
 
-/**
+/*
  checks if 2 strings are equal
  @param s1- first string to check
  @param s2- second string to check
  @return
  false if by some character the strings differ
  true if they are exactly the same
- */
+ 
 bool equalStrings(const char * s1, const char * s2) {
 	for (; *s1 == *s2; ++s1, ++s2) {
 		if (*s1 == 0)
@@ -653,3 +656,5 @@ void printBoard(Game * g) {
 	printf("\n  -----------------\n");
 	printf("   A B C D E F G H\n");
 }
+
+*/
