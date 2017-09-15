@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 		// if a game is to begin, but not reset, we can theoretically play the game
 		else if ((setCmd == SET_START) && gameCmd != GAME_RESET) {
 			//player vs pc is not yet supported, requires a different module
-			if ((*stg).PLAYERS == 1) {
+			if (getPLAYERS() == 1) {
 				printf("unsupported yet");
 				return 0;
 			}
@@ -55,18 +55,22 @@ int main(int argc, char *argv[]) {
 			}
 			//SAPIR the winning messages are not as shown in the pdf
 			int check = isGameChecked(g);
-			if (check == (*stg).WHITE) {
+			if (check == getWHITE()) {
 				if (currentLost(g)) {
-					printf("BLACK WON!");
+					printBoard(g);
+					printf("Checkmate! black player wins the game\n");
+					getchar();
 					return 0;
 				}
 				else {
 					printf("Check: white King is threatend!\n");
 				}
 			}
-			if (check == (*stg).BLACK) {
+			if (check == getBLACK()) {
 				if (currentLost(g)) {
-					printf("white wins the game");
+					printBoard(g);
+					printf("Checkmate! white player wins the game\n");
+					getchar();
 					return 0;
 				}
 				else {
@@ -86,6 +90,6 @@ int main(int argc, char *argv[]) {
 			setCmd = game_settings();
 		}
 	}
-
+	getchar();
 	return 0;
 }

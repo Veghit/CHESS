@@ -17,7 +17,22 @@ typedef struct settings {
 
 static settings setting = {0,1,'_',2,1,1};
 
-static settings * stg = &setting;
+void setDIFF(int newDiff);
 
+void setPLAYERS(int newPlayers);
+
+void setUSER_COLOR(int newCol);
+
+int getDIFF();
+
+int getUSER_COLOR();
+
+int getPLAYERS();
+
+int getWHITE();
+
+int getBLACK();
+
+int getEMPTY();
 
 #endif// !DefaultSettings_H_

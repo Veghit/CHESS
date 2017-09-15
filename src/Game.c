@@ -13,9 +13,46 @@
 what's the purpose of that?
 */
 bool currentLost(Game * g) {
-	return false;
-}
+	int a = 0;
+	int moves[64];
+	int king_index = -10;
+	if (g->currentPlayer == getWHITE()) {
+		for (a = 0; a < 64; a++) {
+			if (g->gameBoard[a / 8][a % 8] == 'k') {
+				king_index = a;
+				break;
+				
+			}
+			
+		}
+		
+	}
+	else {
+		for (a = 0; a < 64; a++) {
+			if (g->gameBoard[a / 8][a % 8] == 'K') {
+				king_index = a;
+				break;
+				
+			}
+			
+		}
+		
+	}
+	int i = getValidMoves(g, king_index, moves);
+	int j;
+	for (j = 0; j < i; j++) {
+		Game * g2 = cloneGame(g);
+		makeMove(g2, king_index, moves[j]);
+		
+			if (!isGameChecked(g2)) {
+			return false;
+			
+		}
+		
+	}
+	return true;
 
+}
 // it there a CHECK?
 /**
 @param g- the current game
@@ -30,7 +67,7 @@ int isGameChecked(Game* g) {
 	int moves[64]; //its like the board flattened into 1 dimensional array
 	int king_index = -10;
 	//if the current player is white
-	if (g->currentPlayer == ((*stg).WHITE)) {
+	if (g->currentPlayer == (getWHITE())) {
 		for (a = 0; a < 64; a++) {
 			// we find the location of the white king
 			if (g->gameBoard[a / 8][a % 8] == 'k') {
@@ -47,7 +84,7 @@ int isGameChecked(Game* g) {
 					//if one of the possible moves is in the same index as the king's, 
 					//then the king is checked
 					if (moves[i] == king_index)
-						return ((*stg).WHITE);
+						return (getWHITE());
 				}
 			}
 		}
@@ -66,7 +103,7 @@ int isGameChecked(Game* g) {
 				int j = getValidMoves(g, a, moves);
 				for (int i = 0; i < j; i++) {
 					if (moves[i] == king_index)
-						return ((*stg).BLACK);
+						return (getBLACK());
 				}
 			}
 		}
@@ -85,7 +122,7 @@ int isGameChecked(Game* g) {
 
 */
 bool isColor(char c, int color) {
-	return ((isWhite(c) && (color == (*stg).WHITE)) || (isBlack(c) && (color == (*stg).BLACK)));
+	return ((isWhite(c) && (color == getWHITE())) || (isBlack(c) && (color == getBLACK())));
 }
 
 /**
@@ -121,14 +158,14 @@ bool isGameTied(Game* g) {
 	int moves[64];
 	for (a = 0; a < 64; a++) {
 
-		if (g->currentPlayer == (*stg).WHITE) {
+		if (g->currentPlayer == getWHITE()) {
 			if (isWhite(g->gameBoard[a / 8][a % 8])
 				&& (getValidMoves(g, a, moves) > 0)) {
 				return false;
 			}
 		}
 		else {
-			if (isWhite(g->gameBoard[a / 8][a % 8])
+			if (isBlack(g->gameBoard[a / 8][a % 8])
 				&& (getValidMoves(g, a, moves) > 0)) {
 				return false;
 			}
@@ -147,7 +184,7 @@ bool isGameTied(Game* g) {
 GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 	GameCommand move;
 	printBoard(g);
-	if (g->currentPlayer == (*stg).WHITE)
+	if (g->currentPlayer == getWHITE())
 		printf("White player - enter your move:\n");
 	else
 		printf("Black player - enter your move:\n");
@@ -155,25 +192,30 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 	fgets(moveStr, 1024, stdin);
 	//parses the game command string (aka moveStr) into a proper gameCommand var
 	move = game_parse(moveStr);
-	if (move.cmd == GAME_MOVE) {
+	if ((move.cmd == GAME_MOVE) || (move.cmd == GAME_CASTLE)) {
 		if (move.validArg) {
 			int row1 = move.arg1 / 8;
 			int col1 = move.arg1 % 8;
 			char piece = g->gameBoard[row1][col1];
-			if (g->currentPlayer == (*stg).WHITE && isWhite(piece)) {
-				if (-1 != makeMove(g, move.arg1, move.arg2)) {
-					g->currentPlayer = (*stg).BLACK;
+			if (g->currentPlayer == getWHITE() && isWhite(piece)) {
+				if (move.cmd == GAME_CASTLE) {
+					if (piece != 'r')
+						printf("Wrong position for a rook\n");
+					if (-1 == castle(g, move.arg1))
+						 printf("Illegal castling move\n");
+					
+						
 				}
 				else {
-					printf("Illegal move\n");
+					if (-1 == makeMove(g, move.arg1, move.arg2)) {
+						printf("Illegal move\n");
+
+					}
 				}
 
 			}
-			else if (g->currentPlayer == (*stg).BLACK && isBlack(piece)) {
-				if (-1 != makeMove(g, move.arg1, move.arg2)) {
-					g->currentPlayer = (*stg).BLACK;
-				}
-				else {
+			else if (g->currentPlayer == getBLACK() && isBlack(piece)) {
+				if (-1 == makeMove(g, move.arg1, move.arg2)) {
 					printf("Illegal move\n");
 				}
 			}
@@ -189,6 +231,16 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 	return move.cmd;
 }
 
+Game * cloneGame(Game* g) {
+	Game * g2 = (Game*)calloc(1, sizeof(Game));
+	g2->currentPlayer = g->currentPlayer;
+	int i;
+	for (i = 0; i < 64; i++)
+		g2->gameBoard[i / 8][i % 8] = g->gameBoard[i / 8][i % 8];
+	return g2;
+
+}
+
 /**
 @param g- current game
 @ret- void
@@ -197,7 +249,11 @@ resets the game's settings and board to a new game's settings
 
 */
 void resetGame(Game * g) {
-	g->currentPlayer = (*stg).WHITE;
+	g->currentPlayer = getWHITE();
+	g->blackLeftCastle = true;
+	g->blackRightCastle = true;
+	g->whiteLeftCastle = true;
+	g->whiteRightCastle = true;
 	char arr[64] = { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'm', 'm', 'm', 'm',
 		'm', 'm', 'm', 'm', '_', '_', '_', '_', '_', '_', '_', '_', '_',
 		'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_',
@@ -207,6 +263,103 @@ void resetGame(Game * g) {
 	for (x = 0; x <= 63; x++) {
 		g->gameBoard[x / 8][x % 8] = arr[x];
 	}
+}
+
+int castle(Game * g, int arg) {
+	if (isGameChecked(g) == g->currentPlayer)
+		 return -1;
+	if ((arg == 0) && g->whiteLeftCastle) {
+		bool cond1 = (g->gameBoard[0][0] == 'r') && (g->gameBoard[0][1] == '_')
+			 && (g->gameBoard[0][2] == '_') && (g->gameBoard[0][3] == '_')
+			 && (g->gameBoard[0][4] == 'k');
+		Game* g1 = cloneGame(g);
+		Game* g2 = cloneGame(g);
+		g1->gameBoard[0][0] = '_';
+		g2->gameBoard[0][0] = '_';
+		g1->gameBoard[0][1] = 'k';
+		g2->gameBoard[0][2] = 'k';
+		bool cond2 = ((isGameChecked(g1) != getWHITE())
+			 && (isGameChecked(g2) != getWHITE()));
+				// g1 g2 to check king is not threatened on its way to the castling
+			if (cond1 && cond2) {
+			g->gameBoard[0][0] = '_';
+			g->gameBoard[0][2] = 'k';
+			g->gameBoard[0][3] = 'r';
+			g->gameBoard[0][4] = '_';
+			g->currentPlayer = getBLACK();
+			return 1;
+			
+		}
+		
+	}
+	if ((arg == 7) && g->whiteRightCastle) {
+		bool cond1 = (g->gameBoard[0][7] == 'r') && (g->gameBoard[0][6] == '_')
+			 && (g->gameBoard[0][5] == '_') && (g->gameBoard[0][4] == 'k');
+		Game* g1 = cloneGame(g);
+		Game* g2 = cloneGame(g);
+		g1->gameBoard[0][7] = '_';
+		g2->gameBoard[0][7] = '_';
+		g1->gameBoard[0][6] = 'k';
+		g2->gameBoard[0][5] = 'k';
+		bool cond2 = ((isGameChecked(g1) != getWHITE())
+			 && (isGameChecked(g2) != getWHITE()));
+		if (cond1 && cond2) {
+			g->gameBoard[0][7] = '_';
+			g->gameBoard[0][6] = 'k';
+			g->gameBoard[0][5] = 'r';
+			g->gameBoard[0][4] = '_';
+			g->currentPlayer = getBLACK();
+			return 1;
+			
+		}
+		
+	}
+	if ((arg == 56) && g->blackLeftCastle) {
+		bool cond1 = (g->gameBoard[7][0] == 'R') && (g->gameBoard[7][1] == '_')
+			 && (g->gameBoard[7][2] == '_') && (g->gameBoard[7][3] == 'K');
+		Game* g1 = cloneGame(g);
+		Game* g2 = cloneGame(g);
+		g1->gameBoard[7][0] = '_';
+		g2->gameBoard[7][0] = '_';
+		g1->gameBoard[7][1] = 'K';
+		g2->gameBoard[7][2] = 'K';
+		bool cond2 = ((isGameChecked(g1) != getBLACK())
+			 && (isGameChecked(g2) != getBLACK()));
+		if (cond1 && cond2) {
+			g->gameBoard[7][0] = '_';
+			g->gameBoard[7][2] = 'K';
+			g->gameBoard[7][3] = 'R';
+			g->gameBoard[7][4] = '_';
+			g->currentPlayer = getWHITE();
+			return 1;
+			
+		}
+		
+	}
+	if ((arg == 63) && g->blackRightCastle) {
+		bool cond1 = (g->gameBoard[7][7] == 'R') && (g->gameBoard[7][6] == '_')
+			 && (g->gameBoard[7][5] == '_') && (g->gameBoard[7][4] == 'K');
+		Game* g1 = cloneGame(g);
+		Game* g2 = cloneGame(g);
+		g1->gameBoard[7][0] = '_';
+		g2->gameBoard[7][0] = '_';
+		g1->gameBoard[7][1] = 'K';
+		g2->gameBoard[7][2] = 'K';
+		bool cond2 = ((isGameChecked(g1) != getBLACK())
+			 && (isGameChecked(g2) != getBLACK()));
+		if (cond1 && cond2) {
+			g->gameBoard[7][7] = '_';
+			g->gameBoard[7][6] = 'K';
+			g->gameBoard[7][5] = 'R';
+			g->gameBoard[7][4] = '_';
+			g->currentPlayer = getWHITE();
+			return 1;
+			
+		}
+		
+	}
+	return -1;
+	
 }
 
 /**
@@ -231,15 +384,35 @@ int makeMove(Game * g, int arg1, int arg2) {
 	for (j = 0; j < 64; j++) {
 		if (validMoves[j] == arg2) {
 			break;
-			printf("%d", j);
 		}
 	}
 	if (validMoves[j] == arg2) {
+		if ((arg1 == 0) || (arg2 == 0))
+			 g->whiteLeftCastle = false;
+		if ((arg1 == 7) || (arg2 == 7))
+			 g->whiteRightCastle = false;
+		if ((arg1 == 63) || (arg2 == 63))
+			 g->blackRightCastle = false;
+		if ((arg1 == 56) || (arg2 == 56))
+			 g->blackLeftCastle = false;
+		if ((arg1 == 4) || (arg2 == 4)) {
+			g->whiteLeftCastle = false;
+			g->whiteRightCastle = false;
+			
+		}
+		if ((arg1 == 60) || (arg2 == 60)) {
+			g->blackLeftCastle = false;
+			g->blackRightCastle = false;
+			
+		}
 		g->gameBoard[row1][col1] = '_';
 		g->gameBoard[row2][col2] = piece;
+		g->currentPlayer = 1 - g->currentPlayer;
 	}
 	else
 		return -1;
+
+	return 0;
 }
 
 /**
@@ -297,10 +470,10 @@ int getValidMoves(Game* g, int arg, int* moves) {
 
 */
 int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*stg).BLACK;
+	char color = getBLACK();
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*stg).WHITE;
-	if (color == (*stg).WHITE) {
+		color = getWHITE();
+	if (color == getWHITE()) {
 		// first white Pawn move
 		if (row == 1)
 			i = appendMoveIfEmpty(g, row + 2, col, moves, i);
@@ -337,9 +510,9 @@ int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
 
 */
 int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*stg).BLACK;
+	char color = getBLACK();
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*stg).WHITE;
+		color = getWHITE();
 	//rook UP
 	int j = 1;
 	while (appendMoveIfEmpty(g, row + j, col, moves, i) > i) {
@@ -383,9 +556,9 @@ int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
 
 */
 int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*stg).BLACK;
+	char color = getBLACK();
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*stg).WHITE;
+		color = getWHITE();
 	//up right
 	int j = 1;
 	while (appendMoveIfEmpty(g, row + j, col + j, moves, i) > i) {
@@ -429,9 +602,9 @@ int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
 
 */
 int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*stg).BLACK;
+	char color = getBLACK();
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*stg).WHITE;
+		color = getWHITE();
 	i = appendMoveIfEmptyOrConquerable(g, row + 2, col - 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 2, col + 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col + 2, color, moves, i);
@@ -453,9 +626,9 @@ int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
 @ret- number of possible moves for the king from it's current place
 */
 int appendKingMoves(Game *g, int row, int col, int* moves, int i) {
-	char color = (*stg).BLACK;
+	char color = getBLACK();
 	if (isWhite(g->gameBoard[row][col]))
-		color = (*stg).WHITE;
+		color = getWHITE();
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col + 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row, col + 1, color, moves, i);
@@ -552,9 +725,9 @@ bool isEmpty(Game* g, int row, int col) {
 bool isConquerable(Game * g, int row, int col, int color) {
 	if ((row < 8) && (row >= 0) && (col >= 0) && (col < 8)) {
 		char curr = g->gameBoard[row][col];
-		//if ((curr == 'K') || (curr == 'k'))
-		//	return false;
-		return ~isColor(curr, color);
+		if (isEmpty(g, row, col))
+			 return false;
+		return !isColor(curr, color);
 	}
 	else
 		return false;

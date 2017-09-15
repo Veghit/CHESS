@@ -11,6 +11,11 @@ typedef struct game_t {
 	int historySize;
 	int* boardHistory;
 	int saves;
+	//saves if possible to do the certain castling
+	bool whiteRightCastle;
+	bool whiteLeftCastle;
+	bool blackRightCastle;
+	bool blackLeftCastle;
 } Game;
 
 void printBoard(Game* g);
@@ -38,5 +43,6 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
 bool isGameTied(Game* g);
 int isGameChecked(Game* g);
 bool currentLost(Game * g);
-
+Game * cloneGame(Game* g);
+int castle(Game * g, int arg);
 #endif //!Game_H_

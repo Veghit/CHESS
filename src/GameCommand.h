@@ -12,6 +12,7 @@ typedef enum {
 	GAME_RESET,
 	GAME_QUIT,
 	GAME_INVALID_LINE,
+	GAME_CASTLE
 } GAME_COMMAND;
 
 typedef struct game_command_t {
