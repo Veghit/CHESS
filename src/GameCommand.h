@@ -2,7 +2,6 @@
 #define GameCommand_H_
 #include <stdbool.h>
 
-#include "SetCommand.h" //for getNextWord, maybe i need .c
 
 typedef enum {
 	GAME_MOVE,
@@ -26,6 +25,4 @@ GameCommand game_parse(const char* str);
 
 bool equalStrings(const char * s1, const char * s2);
 
-
 #endif //!GameCommand_H_
-

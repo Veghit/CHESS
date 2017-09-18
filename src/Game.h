@@ -1,48 +1,289 @@
 #ifndef Game_H_
 #define Game_H_
 #include <stdbool.h>
-
-
 #include "GameCommand.h"
+
 
 typedef struct game_t {
 	char gameBoard[8][8];
-	int currentPlayer;
-	int historySize;
-	int* boardHistory;
+	int currentPlayer;// THE ONE TO MAKE THE *NEXT* MOVE
+	int* boardHistory; //THIS IS NOT IN USE AT ALL?! SAPIR
 	int saves;
-	//saves if possible to do the certain castling
 	bool whiteRightCastle;
 	bool whiteLeftCastle;
 	bool blackRightCastle;
 	bool blackLeftCastle;
+	int DIFF;
+	//number of players. either 1 or 2? SAPIR
+	int PLAYERS;
+	int USER_COLOR;
 } Game;
 
-void printBoard(Game* g);
-int getValidMoves(Game* g, int arg, int* validMoves);
+Game * lastGames[3];
+
+char * lastMoves[6];
+/*GENERAL UTILITIES*/
+
+int getColor(char c);
+/**
+@param c- the character of the piece
+@param color- the color of the piece
+@ret- true if the character and color of the piece match
+--> capital letter as a sign for black and so is the color of the piece
+or little letter as a sign for white, and so it the color if the piece
+false otherwise
+
+*/
 bool isColor(char c, int color);
+/**
+@param c- character of the piece
+@ret- true if it is an english letter, which isn't a capital
+that shows the piece is white, as is the sign for a white piece is a none-capital
+false otherwise
+
+*/
 bool isWhite(char);
+/**
+@param c- character of the piece
+@ret- true if it is a capital letter
+that shows it is black, as the sign for a black character is a capital letter.
+false otherwise.
+
+*/
 bool isBlack(char);
+/* END OF GENERAL UTILITIES*/
 
-bool isEmpty(Game*, int, int);
-bool isConquerable(Game * g, int row, int col, int color);
-int makeMove(Game * g, int arg1, int arg2);
-int appendPawnMoves(Game *g, int row, int col, int* moves, int i);
-int appendRookMoves(Game *g, int row, int col, int* moves, int i);
-int appendBishopMoves(Game *g, int row, int col, int* moves, int i);
-int appendKnightMoves(Game *g, int row, int col, int* moves, int i);
-int appendKingMoves(Game *g, int row, int col, int* moves, int i);
-int appendMoveIfEmpty(Game* g, int row, int col, int * moves, int i);
-int appendMoveIfConquerable(Game* g, int row, int col, int color, int * moves,
-	int i);
-int appendMoveIfEmptyOrConquerable(Game* g, int row, int col, int color,
-	int * moves, int i);
+/* GAME UTILITIES*/
+/**
+@param g- the game itself (and obviously it's state)
+@ret- void
+prints the game's state, as in, the board as it is.
+*/
+void printBoard(Game* g);
 
+/**
+@param g- current game
+@ret- void
+resets the game's settings and board to a new game's settings
+
+
+*///TODO
 void resetGame(Game * g);
-GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
+
+/**
+@param g- the current game
+@ret- true if there are no more valid moves for the current player, for any piece
+false otherwise
+
+*/
 bool isGameTied(Game* g);
+// it there a CHECK?
+/**
+@param g- the current game
+@ret- white if the white king is checked
+black if the black king is checked
+-1 if the game isn't checked
+*///TODO
 int isGameChecked(Game* g);
+
 bool currentLost(Game * g);
+/**
+@param g- receives a game
+@ret- returns a game which has all the fields value of the g in it's fields
+*/
+
+//SAPIR filled out missing things, but what about boardHistory?
+//TODO
 Game * cloneGame(Game* g);
+
+void deleteGame(Game* g);
+
+/*END OF GAME UTILITIES*/
+
+
+/* MOVES AND SUPPORTERS*/
+/**
+@param g- current game
+@param arg- the piece's location on a flattened board
+@param moves- an existing array of possible moves, usually filled with other pieces possible moves or/and
+0's or -1's at the very least.
+@ret- the number of next valid moves for the piece(aka arg) in the game,
+in accordance with the piece's type obviously
+
+*/
+int getValidMoves(Game* g, int arg, int* validMoves);
+
+void printValidMoves(Game * g, int arg);
+/**
+@param g- the current game
+@param arg1-
+@param arg2-
+@ret-
+
+*/ //TODO
+int makeMove(Game * g, int arg1, int arg2);
+/**
+@param g- current game
+@param row- current row of the piece
+@param col- current column of the piece
+@param moves- an existing array of possible moves, usually filled with other pieces possible moves or/and
+0's or -1's at the very least.
+@param i- the next empty/ fillable location in the array
+@ret- number of possible moves for the pawn from it's current place
+
+*/
+int appendPawnMoves(Game *g, int row, int col, int* moves, int i);
+/**
+ @param g- current game
+ @param row- current row of the piece
+ @param col- current column of the piece
+ @param moves- an existing array of possible moves, usually filled with other pieces possible moves or/and
+ 0's or -1's at the very least.
+ @param i- the next empty/ fillable location in the array
+ @ret- number of possible moves for the rook from it's current place
+
+ */
+int appendRookMoves(Game *g, int row, int col, int* moves, int i);
+/**
+@param g- current game
+@param row- current row of the piece
+@param col- current column of the piece
+@param moves- an existing array of possible moves, usually filled with other pieces possible moves or/and
+0's or -1's at the very least.
+@param i- the next empty/ fillable location in the array
+@ret- number of possible moves for the bishop from it's current place
+
+*/
+int appendBishopMoves(Game *g, int row, int col, int* moves, int i);
+/**
+@param g- current game
+@param row- current row of the piece
+@param col- current column of the piece
+@param moves- an existing array of possible moves, usually filled with other pieces possible moves or/and
+0's or -1's at the very least.
+@param i- the next empty/ fillable location in the array
+@ret- number of possible moves for the knight from it's current place
+
+*/
+int appendKnightMoves(Game *g, int row, int col, int* moves, int i);
+/**
+@param g- current game
+@param row- current row of the piece
+@param col- current column of the piece
+@param moves- an existing array of possible moves, usually filled with other pieces possible moves or/and
+0's or -1's at the very least.
+@param i- the next empty/ fillable location in the array
+@ret- number of possible moves for the king from it's current place
+*/
+int appendKingMoves(Game *g, int row, int col, int* moves, int i);
+/**
+@param g- the current game
+@param row- a certain row in the game's board
+@param col-a certain column in the game's board
+@param moves- an array which contains all "previous" moves
+@param i- the current empty spot of the moves array
+@ret- if the spot of the game's current board (before the move was made)
+is empty, updates the moves array,
+returns the next empty spot on the moves array
+otherwise, returns the current empty spot (which is just i)
+*/
+int appendMoveIfEmpty(Game* g, int row, int col, int * moves, int i);
+/**
+@param g- the current game
+@param row- a certain row in the game's board
+@param col-a certain column in the game's board
+@param moves- an array which contains all "previous" moves
+@param i- the current empty spot of the moves array
+@ret- if the spot of the game's current board (before the move was made)
+is conquerable, updates the moves array,
+returns the next empty spot on the moves array
+otherwise, returns the current empty spot (which is just i)
+*/
+
+int appendMoveIfConquerable(Game* g, int row, int col, int color, int * moves,int i);
+/**
+ @param g- the current game
+ @param row- a certain row in the game's board
+ @param col- a certain column in the game's board
+ @param moves- an array which contains all "previous" moves
+ @param i- the current empty spot of the moves array
+ @ret- if the spot of the game's current board (before the move was made)
+ is empty or conquerable, makes a move and returns the next empty spot in the moves array
+ otherwise, simply returns the current empty spot (since the move couldn't have been made)
+ */
+int appendMoveIfEmptyOrConquerable(Game* g, int row, int col, int color,int * moves, int i);
+
+/**
+@param g- the current game
+@param row- a certain row in the game's board
+@param col- a certain column in the game's board
+
+@ret- true if in the current spot of the game's board there's no piece
+false otherwise
+
+*/
+bool isEmpty(Game*, int, int);
+
+/**
+@param g- the current game
+@param row- a certain row in the game's board
+@param col- a certain column in the game's board
+@param color-  the color of the piece that is supposed to make the move
+@ret- true if the specified spot of the current game's board is conquerable
+--> there's a different piece color there(than the one we received as param)
+false otherwise
+
+*/
+bool isConquerable(Game * g, int row, int col, int color);
+
+/**
+@param g- the game
+@param row- a certain row in the game's board
+@param col- a certain column in the game's board
+@param color- the color of the piece that is supposed to make the move
+@ret- true if the spot in the current game's board is conquerable/ empty
+and false otherwise.
+
+*/
+bool isEmptyOrConquerable(Game* g, int row, int col, int color);
+
+bool isThreatened(Game * g, int arg);
+
 int castle(Game * g, int arg);
+
+bool canCastle(Game* g, int arg);
+
+void pawnPromotion(Game * g, int arg);
+
+/* END OF MOVES AND SUPPORTERS*/
+
+/* INCLUDING MINMAX*/
+/*
+FROM HERE NEED TO MAKE/ COMPLETE/ CORRECT*/
+/**
+@param g- the current game
+@param moveStr- regularly an empty string in the length of 1024
+@ret-
+
+*///TODO
+GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
+
+void pcMove(Game* g);
+
+char* spMinimaxSuggestMove(Game* g, unsigned int maxDepth);
+
+int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int* indexChosen, char chosenMove[17]);
+
+char** listAllMoves(Game* g, int curPlayer);
+
+int calcLowest(Game* g);
+
+int maxElem(int* arr, int length, int* indexChosen);
+
+int minElem(int* arr, int length, int* indexChosen);
+/* END OF INCLUDING MINMAX*/
+
+/* UNTILL HERE*/
 #endif //!Game_H_
+
+
