@@ -28,7 +28,7 @@ bool currentLost(Game * g) {
 			}
 		}
 	}
-	int i = getValidMoves(g, king_index, moves);
+	int i = getValidMoves(g, king_index, moves,0);
 	int j;
 	for (j = 0; j < i; j++) {
 		Game * g2 = cloneGame(g);
@@ -74,7 +74,7 @@ int isGameChecked(Game* g) {
 }
 
 void deleteGame(Game* g) {
-	free(g);
+	free(g);// EXCEPTION THROWN AT THE DELETION! SO IM ALL CLEAR?! YAHOO?! NOT ENTIRELY SURE. SAPIR. TODO
 	g = NULL;
 }
 
@@ -139,7 +139,7 @@ bool isGameTied(Game* g) {
 		// white piece has no moves
 		if (g->currentPlayer == WHITE) {
 			if (isWhite(g->gameBoard[a / 8][a % 8])) {
-				int i = getValidMoves(g, a, moves);
+				int i = getValidMoves(g, a, moves,0);
 
 				int j;
 				for (j = 0; j < i; j++) {
@@ -158,7 +158,7 @@ bool isGameTied(Game* g) {
 		} else {
 
 			if (isBlack(g->gameBoard[a / 8][a % 8])) {
-				int i = getValidMoves(g, a, moves);
+				int i = getValidMoves(g, a, moves,0);
 				int j;
 				for (j = 0; j < i; j++) {
 					Game* g2 = cloneGame(g);
@@ -191,8 +191,10 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 	Game * tempClone = cloneGame(g);
 	char * lastMove = (char*) calloc(100, sizeof(char));
 	if (g->USER_COLOR == BLACK) {
-		if(g->PLAYERS==1)
+		if (g->PLAYERS == 1) {
+			printf("entered pc move line in twoPlayersGame\n");
 			pcMove(g);
+		}
 		printBoard(g);
 		printf("Black player - enter your move:\n");
 	}
@@ -355,6 +357,8 @@ void resetGame(Game * g) {
 	g->whiteLeftCastle = true;
 	g->whiteRightCastle = true;
 	g->saves = 0;
+	g->DIFF = 2;
+	g->PLAYERS = 1;
 	char arr[64] = { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'm', 'm', 'm', 'm',
 			'm', 'm', 'm', 'm', '_', '_', '_', '_', '_', '_', '_', '_', '_',
 			'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_',
@@ -489,7 +493,7 @@ int makeMove(Game * g, int arg1, int arg2) {
 	int j;
 	for (j = 0; j < 64; j++)
 		validMoves[j] = -1;
-	getValidMoves(g2, arg1, validMoves);
+	getValidMoves(g2, arg1, validMoves,0);
 	for (j = 0; j < 64; j++) {
 		if (validMoves[j] == arg2) {
 			break;
@@ -534,48 +538,49 @@ int makeMove(Game * g, int arg1, int arg2) {
  @param arg- the piece's location on a flattened board
  @param moves- an existing array of possible moves, usually filled with other pieces possible moves or/and
  0's or -1's at the very least.
+ @param i- the next empty space in the moves array
  @ret- the number of next valid moves for the piece(aka arg) in the game,
  in accordance with the piece's type obviously
 
  */
-int getValidMoves(Game* g, int arg, int* moves) {
+int getValidMoves(Game* g, int arg, int* moves, int i) {
 	char piece = g->gameBoard[arg / 8][arg % 8];
-	int i = 0;
+	int numMoves=0;
 	int row = arg / 8;
 	int col = arg % 8;
 	switch (piece) {
 	case 'M':
 	case 'm':
-		i = appendPawnMoves(g, row, col, moves, i);
+		numMoves = appendPawnMoves(g, row, col, moves, i);
 		break;
 	case 'R':
 	case 'r':
-		i = appendRookMoves(g, row, col, moves, i);
+		numMoves = appendRookMoves(g, row, col, moves, i);
 		break;
 	case 'N':
 	case 'n':
-		i = appendKnightMoves(g, row, col, moves, i);
+		numMoves = appendKnightMoves(g, row, col, moves, i);
 		break;
 	case 'k':
 	case 'K':
-		i = appendKingMoves(g, row, col, moves, i);
+		numMoves = appendKingMoves(g, row, col, moves, i);
 		break;
 	case 'Q':
-	case 'q':
-		i = appendRookMoves(g, row, col, moves, i); //rook here intentionally queen is rook+bishop
-		i = appendBishopMoves(g, row, col, moves, i);
+	case 'q':// TODO check correctness SAPIR
+		numMoves = appendRookMoves(g, row, col, moves, i); //rook here intentionally queen is rook+bishop
+		numMoves = appendBishopMoves(g, row, col, moves, numMoves+i);//
 		break;
 	case 'b':
 	case 'B':
-		i = appendBishopMoves(g, row, col, moves, i);
+		numMoves = appendBishopMoves(g, row, col, moves, i);
 		break;
 	}
-	return i;
+	return numMoves;
 }
 
 void printValidMoves(Game * g, int arg) {
 	int* moves = (int*) calloc(64, sizeof(int));
-	int i = getValidMoves(g, arg, moves);
+	int i = getValidMoves(g, arg, moves, 0);
 	int j;
 	int k[64];
 	for (j = 0; j < 64; j++)
@@ -620,7 +625,7 @@ bool isThreatened(Game * g, int arg) {
 	for (a = 0; a < 64; a++) {
 		int c2 = getColor(g->gameBoard[a / 8][a % 8]);
 		if ((c2 != -1) && (c1 != c2)) {
-			int j = getValidMoves(g, a, moves);
+			int j = getValidMoves(g, a, moves, 0);
 			for (int i = 0; i < j; i++) {
 				if (moves[i] == arg)
 					return true;
@@ -641,6 +646,7 @@ bool isThreatened(Game * g, int arg) {
 
  */
 int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
+	int initialPlace = i;
 	char color = BLACK;
 	if (isWhite(g->gameBoard[row][col]))
 		color = WHITE;
@@ -666,7 +672,7 @@ int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
 		i = appendMoveIfConquerable(g, row - 1, col - 1, color, moves, i);
 
 	}
-	return i;
+	return i-initialPlace;
 }
 
 /**
@@ -681,6 +687,7 @@ int appendPawnMoves(Game *g, int row, int col, int* moves, int i) {
  */
 int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
 	char color = BLACK;
+	int initialPlace = i;
 	if (isWhite(g->gameBoard[row][col]))
 		color = WHITE;
 //rook UP
@@ -711,7 +718,7 @@ int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
 		j++;
 	}
 	i = appendMoveIfConquerable(g, row, col - j, color, moves, i);
-	return i;
+	return i-initialPlace;
 }
 
 /**
@@ -725,6 +732,7 @@ int appendRookMoves(Game *g, int row, int col, int* moves, int i) {
 
  */
 int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
+	int initialPlace = i;
 	char color = BLACK;
 	if (isWhite(g->gameBoard[row][col]))
 		color = WHITE;
@@ -756,7 +764,7 @@ int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
 		j++;
 	}
 	i = appendMoveIfConquerable(g, row - j, col + j, color, moves, i);
-	return i;
+	return i-initialPlace;
 }
 
 /**
@@ -771,6 +779,7 @@ int appendBishopMoves(Game *g, int row, int col, int* moves, int i) {
  */
 int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
 	char color = BLACK;
+	int initialPlace = i;
 	if (isWhite(g->gameBoard[row][col]))
 		color = WHITE;
 	i = appendMoveIfEmptyOrConquerable(g, row + 2, col - 1, color, moves, i);
@@ -781,7 +790,7 @@ int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
 	i = appendMoveIfEmptyOrConquerable(g, row - 2, col + 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col - 2, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row - 1, col - 2, color, moves, i);
-	return i;
+	return i-initialPlace;
 }
 
 /**
@@ -795,6 +804,7 @@ int appendKnightMoves(Game *g, int row, int col, int* moves, int i) {
  */
 int appendKingMoves(Game *g, int row, int col, int* moves, int i) {
 	char color = BLACK;
+	int initialPlace = i;
 	if (isWhite(g->gameBoard[row][col]))
 		color = WHITE;
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col, color, moves, i);
@@ -805,7 +815,7 @@ int appendKingMoves(Game *g, int row, int col, int* moves, int i) {
 	i = appendMoveIfEmptyOrConquerable(g, row - 1, col - 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row, col - 1, color, moves, i);
 	i = appendMoveIfEmptyOrConquerable(g, row + 1, col - 1, color, moves, i);
-	return i;
+	return i-initialPlace;
 }
 
 /**
@@ -821,7 +831,10 @@ int appendKingMoves(Game *g, int row, int col, int* moves, int i) {
  */
 int appendMoveIfEmpty(Game* g, int row, int col, int * moves, int i) {
 	if (isEmpty(g, row, col)) {
+		if (i >= 1088)
+			printf("1000\n");
 		moves[i] = 8 * row + col;
+		
 		return i + 1;
 	} else
 		return i;
@@ -838,8 +851,7 @@ int appendMoveIfEmpty(Game* g, int row, int col, int * moves, int i) {
  returns the next empty spot on the moves array
  otherwise, returns the current empty spot (which is just i)
  */
-int appendMoveIfConquerable(Game* g, int row, int col, int color, int * moves,
-		int i) {
+int appendMoveIfConquerable(Game* g, int row, int col, int color, int * moves,	int i) {
 	if (isConquerable(g, row, col, color)) {
 		moves[i] = 8 * row + col;
 		return i + 1;
@@ -957,36 +969,56 @@ Game * cloneGame(Game* g) {
 
 
 void pcMove(Game* g) {
-	char move[17] = spMinimaxSuggestMove(g, g->DIFF);
-	int originalPlace = (*(move + 3));// should give the first number in the string
+	//printf("entered pcMove func\n");
+	char chosenMove[17];
+	//printf("DIFF %d\n", g->DIFF);
+	MinimaxSuggestMove(g, g->DIFF, chosenMove);
+	
+	//printf("%s %c" ,chosenMove, '\n');
+	int originalPlace = (*(chosenMove + 3));// should give the first number in the string
 	originalPlace *= 8;
-	originalPlace += (*(move + 5));// should be the second number in the string
-	int goalPlace = (*(move + 13));
+	originalPlace += (*(chosenMove + 5));// should be the second number in the string
+	printf(" original place for pc move : %d", originalPlace);
+	int goalPlace = (*(chosenMove + 12));
 	goalPlace *= 8;
-	goalPlace += (*(move + 15));
+	goalPlace += (*(chosenMove + 14));
+	printf(" goal place for pc move : %d", goalPlace);
 	makeMove(g, originalPlace, goalPlace);
 }
 
-char* spMinimaxSuggestMove(Game* g, unsigned int maxDepth) {
-	if (maxDepth >5)
-		return "wrong maxDepth";
+void MinimaxSuggestMove(Game* g, unsigned int maxDepth, char* chosenMove) {
+	//printf("entered minimax\n");
+	if (maxDepth > 5) {
+		chosenMove = "wrong maxDepth";
+		//printf("wrong maxDepth\n");
+		
+		return;
+	}
 	Game * clone;
-	if (g == NULL || maxDepth <= 0)
-		return "wrong param vals";
+	if (g == NULL || maxDepth <= 0) {
+		chosenMove = "wrong param vals";
+		//printf("maxDepth %d\n", maxDepth);
+		//printf("wrong param vals\n");
+		return;
+	}
 	clone = cloneGame(g);//NOT COMPLETE
-	if (clone == NULL)
-		return "wrong -didnt manage to clone";
-	int* indexChosen = malloc(sizeof(int));
-	char chosenMove[17];//TODO even if it's not rlly a pointer, does it still have the updated value each time?
-	int score = create_Tree(clone, maxDepth, 1, indexChosen, chosenMove);
+	if (clone == NULL) {
+		chosenMove = "wrong -didnt manage to clone";
+		//printf("wrong -didnt manage to clone\n");
+		return;
+	}
 	
-	destroy_game(clone);
-	//printf("CHOOSE:%d\n",index+1);
-	return chosenMove;
+	int indexChosen[1] ;
+	
+	int score = create_Tree(clone, maxDepth, 0, indexChosen, chosenMove);
+	printf("%s\n", chosenMove);
+	deleteGame(clone);
+
 
 }
 //TODO destory the games created on the go. but WHEN?
-int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int* indexChosen, char chosenMove[17]) {
+int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int indexChosen[], char chosenMove[]) {
+	//printf("entered create_tree \n");
 	Game* clone;
 	int i = 0, mark=0, startCopy=0;
 	int arr[1024];// since there r only up to 1024 moves possible for any board
@@ -1002,96 +1034,158 @@ int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int* indexCh
 	}
 	if (isGameTied(curGame))
 		return 0;
+	//printf("returned from isGameChecked/Tied checks\n");
 	if (curDepth == maxDepth)
-		return calcLowest(curGame);
-	char** allPossibleMoves = listAllMoves(curGame, curGame->currentPlayer);
+		return calcLowest(curGame, curDepth % 2);
+	
+	char allPossibleMoves[1024][17];
+	listAllMoves(curGame, curGame->currentPlayer, allPossibleMoves, 1024, 17);
+
+	//printf("%s\n", allPossibleMoves[0]);
+	//getchar();
 	//now i have all possible moves, and need to make a recursion node for each
-	char* s = *allPossibleMoves;
-	for (; *s != 'e'; s+=17, startCopy+=17) {
+	intializeRest(allPossibleMoves, 1024, 17, "equal no value");
 
-		clone = cloneGame(curGame);
-		originalPlace = (*(s + 3));// should give the first number in the string
-		originalPlace *= 8;
-		originalPlace+= (*(s + 5));// should be the second number in the string
-		goalPlace = (*(s + 13));
-		goalPlace *= 8;
-		goalPlace += (*(s + 15));
-		makeMove(clone, originalPlace, goalPlace);
-		//this all should be in the loop, but 
-		if (curDepth % 2 == 1) {
+	for (int j=0; j<1024;j++, startCopy+=17) {// sends warning about if
+		if (strcmp(allPossibleMoves[j],"equal no value")) {// TODO need to change this into something that points out it's not a legitimate make-move string
+			//that should make it so there wont be a stack overflow in level one
+			printf("entered if in the make move loop in the create_tree\n");
+			clone = cloneGame(curGame);
+			originalPlace = allPossibleMoves[j][3];// should give the first number in the string
+			originalPlace *= 8;
+			originalPlace += allPossibleMoves[j][5];// should be the second number in the string
+			goalPlace = allPossibleMoves[j][12];
+			goalPlace *= 8;
+			goalPlace += allPossibleMoves[j][14];
+			printf("in the make move loop in the create_tree, original place is %d, goal place is %d\n", originalPlace, goalPlace);
+			makeMove(clone, originalPlace, goalPlace);
+			//this all should be in the loop, but 
 			arr[i++] = create_Tree(clone, maxDepth, curDepth++, indexChosen, chosenMove);
-			// the chosen index in the max/min final array, is supposed to resonate with the max/min chosen place in the allPossibleMoves array
-			destroy_game(clone);//TODO not sure the destruction should be here
-			mark= maxElem(arr, 1024, indexChosen);
-			startCopy/=*indexChosen;
-			for (int j = 0; j < 17; j++) {
-				chosenMove[j] = allPossibleMoves[startCopy][j];
-			}
-			free(allPossibleMoves);
-			return mark;
-
 		}
-		else {
-			arr[i++] = create_Tree(clone, maxDepth, curDepth++, indexChosen, chosenMove);
-			destroy_game(clone);
-			mark= minElem(arr, 1024, indexChosen);
-			startCopy /= (*indexChosen);
-			for (int j = 0; j < 17; j++) {
-				chosenMove[j] = allPossibleMoves[startCopy][j];
-			}
-			free(allPossibleMoves);
-			return mark;
-		}
-	}	
+		
+	}
+	
+	deleteGame(clone);
+	if (curDepth % 2 == 1) {
+		// the chosen index in the max/min final array, is supposed to resonate with the max/min chosen place in the allPossibleMoves array
+		//TODO not sure the destruction should be here
+		mark = maxElem(arr, 1024, indexChosen);
+	}
+	else {
+		mark = minElem(arr, 1024, indexChosen);
+	}
+	startCopy /= indexChosen[0];
+	for (int j = 0; j < 17; j++) {
+		chosenMove[j] = allPossibleMoves[startCopy][j];
+	}
+	free(allPossibleMoves);
+	return mark;
 }
-
-char** listAllMoves(Game* g, int curPlayer) {
-	int* movesArr = (int*)calloc(1088, sizeof(int));// 64 places on board, multiply by 16 pieces +1 for empty spaces to differentiate
-	initializeSpecial( movesArr, 1088, 64);
-	char * originalPiece= (char*)calloc(16,1);
-	int* originalPlace = (int*)calloc(16, sizeof(int));
-	char cur = 'c';
-	int index = 0;
+void intializeRest(char arr[][17], int len, int size, char * str) {
+	for (int i = 0; i < len; i++) {
+		if ((arr[i][0] > 'z' || arr[i][0] < 'a') ||
+			(arr[i][0]<'A' || arr[i][0]>'Z'))
+			strcpy(arr[i],str);
+	}
+}
+void listAllMoves(Game* g, int curPlayer, char allPossibleMoves[][17], int length, int size) {
+	//printf("entered listallMoves \n");
+	int movesArr[1105];// 64+1 places on board, multiply by 16 pieces +1 for empty spaces to differentiate
+	initializeSpecial( movesArr, 1105, 65);
+	/*
+	created the following arrs since movesArr is being filled at the first allowed empty spot after locating a piece that can move.
+	so this 2 are filled with the resonating pieces and original locations of those pieces
+	*/
+	char originalPiece[16];
+	int originalPlace [16];
+	char cur = 'c',c;
+	int index = 0, numMoves=0, textPlace = 0;;
+	int nextSpot = 0;
+	int x =0, y = 0,z=0,t=0;
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 8; j++) {
 			cur = g->gameBoard[i][j];
 			if (cur != '_') {
-				getValidMoves(g, i * 8 + j, movesArr);
-				originalPiece[index] = cur;
-				originalPlace[index] = i * 8 + j;
-				index++;
+				if(getColor(cur)== g->currentPlayer){
+					numMoves=getValidMoves(g, (i * 8 + j), movesArr, nextSpot);
+					if (numMoves != 0) {
+						//printf("num of moves for starter board for %c in place in board <%d, %d> is %d\n", cur, i, j, numMoves);
+						nextSpot += 65;
+						originalPiece[index] = cur;
+						originalPlace[index] = i * 8 + j;
+						index++;
+					}
+				}
 			}
 		}
 	}
-	char ** fromTo = calloc(1024, 17);// 17 chars is the length of one string
-	//overall 1024 possible moves.
+	//printf("possibly finished the first double loop accurately, checking by printing movesArr\n");
+	//printIntArr(movesArr, 1105);
+	//printf("\n");
 	index = 0;
-	int textPlace = 0;
 	
+	//printCharArr(originalPiece, 16);
+	//printf("\nprinted original piece arr well\n");
+	//printIntArr(originalPlace, 16);
+	//printf("printed using arrays correctly\n");
+	//getchar();
 	for (int i = 0; i < 1088; i++) {
-		if (movesArr[i] != -1 && movesArr[i]!=0) {
-			fromTo[textPlace] = "%c <%d,%d> to <%d,%d>", originalPiece[index], 
-				(originalPlace[index] / 8), (originalPlace[index] % 8), movesArr[i];
+		if (movesArr[i] != -1 && movesArr[i]!=0 && originalPiece[index]!=0) {
+			c = originalPiece[index];
+			x = originalPlace[index] / 8;
+			y = originalPlace[index] % 8;
+			z = movesArr[i] / 8;
+			t = movesArr[i] % 8;
+			//printf("%c %d %d %d %d\n", originalPiece[index], x, y, z, t);
+			
+			sprintf(allPossibleMoves[textPlace], "%c <%d,%d> to <%d,%d>", originalPiece[index], x, y, z, t);
+			//printf("now filling\n");
+			//void fixStrAndUpdate(allPossibleMoves, textPlace,c, x, y, z, t);
+			//
+			//printf("entered the filling fromTo loop");
+			//printf("finally fills and prints the allPossibleMoves/ fromTo:\n %s %c\n",allPossibleMoves[textPlace], '\n');
 			textPlace++;
 		}
 		if (movesArr[i] == -1)
 			index++;
 	}
-	realloc(fromTo, 17 * (textPlace + 1) +1);// reallocing to actual place used
-	fromTo[textPlace + 1 + 1] = "e";// last place in array
-	free(originalPiece);
-	free(originalPlace);
-	return fromTo;
-
 }
+/*
+void fixStrAndUpdate(char fromTo[][17], int index, char piece, int originRow, int originCol, int goalRow, int goalCol) {
+	printf("entered the fix func\n");
+	fromTo[index][0]= piece;
+	printf("%c this is the char for the format\n ", fromTo[index][0]);
+	fromTo[index][1] = ' ';
+	fromTo[index][2] = '<';
+	fromTo[index][3] = '0' + originRow;
+	fromTo[index][4] = ',';
+	fromTo[index][5] = '0' + originCol;
+	strcat(fromTo[index], "> to <");
+	fromTo[index][12] = '0' + goalRow;
+	fromTo[index][13] = ',';
+	fromTo[index][14] = '0' + goalCol;
+}
+*/
+void printIntArr(int* arr, int len) {
+	for (int i = 0; i < len; i++) {
+			printf("%d ", arr[i]);
+		}
+}
+
+void printCharArr(char* arr, int len) {
+	for (int i = 0; i < len; i++) {
+		printf("%c ", arr[i]);
+	}
+}
+
 /**
 @param arr- receives an int array
 @param length- receives the length of the array
 @param jump- receives the repititive place in which the array's value should be different
 */
-initializeSpecial(int* arr, int length, int jump) {
+void initializeSpecial(int* arr, int length, int jump) {
 	for (int i = 0; i < length; i++) {
-		if (i%jump == 0)
+		if ((i+1)%jump == 0)
 			arr[i] = -1;
 		else
 			arr[i] = 0;
@@ -1106,7 +1200,7 @@ evaluation of white pieces on board - the evaluation of black pieces
 otherwise, the opposite
 
 */
-int calcLowest(Game* g) {
+int calcLowest(Game* g, int depthOddity) {
 	int evalWHITE = 0;
 	int evalBLACK = 0;
 	char cur = 'c';
@@ -1154,18 +1248,20 @@ int calcLowest(Game* g) {
 
 	}
 	//reminder, current player is the one ABOUT to make a move.
-	if (g->currentPlayer == WHITE)
+
+	if ((g->currentPlayer == WHITE && depthOddity==1) ||// if the level is odd, the current player's color is opposite to the original caller's color
+		(g->currentPlayer== BLACK && depthOddity==0))	//if level is even, the current player's color is also the original caller's color
 		return evalBLACK - evalWHITE;
 	else
 		return evalWHITE - evalBLACK;
 }
 
 
-int maxElem(int* arr, int length, int* indexChosen) {
+int maxElem(int* arr, int length, int indexChosen[]) {
 	int temp = INT_MIN;
 	for (int i = 0; i < length; i++) {
 		if (arr[i] > temp) {
-			*indexChosen = i;
+			indexChosen[0] = i;
 			temp = arr[i];
 		}
 	}
@@ -1173,11 +1269,11 @@ int maxElem(int* arr, int length, int* indexChosen) {
 	return temp;
 }
 
-int minElem(int* arr, int length, int* indexChosen) {
+int minElem(int* arr, int length, int indexChosen[]) {
 	int temp = INT_MAX;
 	for (int i = 0; i < length; i++)
 		if (arr[i] < temp) {
-			*indexChosen = i;
+			indexChosen[0] = i;
 			temp = arr[i];
 		}
 	free(arr);

@@ -111,7 +111,7 @@ void deleteGame(Game* g);
 in accordance with the piece's type obviously
 
 */
-int getValidMoves(Game* g, int arg, int* validMoves);
+int getValidMoves(Game* g, int arg, int* validMoves, int i);
 
 void printValidMoves(Game * g, int arg);
 /**
@@ -270,17 +270,27 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
 
 void pcMove(Game* g);
 
-char* spMinimaxSuggestMove(Game* g, unsigned int maxDepth);
+void MinimaxSuggestMove(Game* g, unsigned int maxDepth, char* chosenMove);
 
-int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int* indexChosen, char chosenMove[17]);
+int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int indexChosen[], char chosenMove[]);
 
-char** listAllMoves(Game* g, int curPlayer);
+void intializeRest(char arr[][17], int len, int size, char* str);
 
-int calcLowest(Game* g);
+void listAllMoves(Game* g, int curPlayer,char allPossibleMoves[][17], int length, int size);
 
-int maxElem(int* arr, int length, int* indexChosen);
+//void fixStrAndUpdate(char fromTo[][17], int index, char piece, int originRow, int originCol, int goalRow, int goalCol);
 
-int minElem(int* arr, int length, int* indexChosen);
+void printIntArr(int* arr, int len);
+
+void printCharArr(char* arr, int len);
+
+void initializeSpecial(int* arr, int length, int jump);
+
+int calcLowest(Game* g, int depthOddity);
+
+int maxElem(int* arr, int length, int indexChosen[]);
+
+int minElem(int* arr, int length, int indexChosen[]);
 /* END OF INCLUDING MINMAX*/
 
 /* UNTILL HERE*/

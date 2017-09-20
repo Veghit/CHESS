@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 	GAME_COMMAND gameCmd = GAME_MOVE;
 	SET_COMMAND setCmd = (SET_COMMAND) NULL;
 	Game * g = (Game*) calloc(1, sizeof(Game));
-	resetGame(g);
+	resetGame(g);// SAPIR -added a DIFF initialization
 	/**
 	 finished initializing new game
 	 starting to actually make the game run
@@ -40,13 +40,6 @@ int main(int argc, char *argv[]) {
 			return 0;
 			// if a game is to begin, but not reset, we can theoretically play the game
 		} else if ((setCmd == SET_START) && (gameCmd != GAME_RESET) && (gameCmd != GAME_UNDO)) {
-			if (g->PLAYERS == 1) {
-				//player vs pc is not yet supported, requires a different module
-				//SAPIR included it in the 2playersgame func
-				printf("unsupported yet");
-				getchar();
-				return 0;
-			}
 			//think this should be after the lost check SAPIR
 			// checks if the current player can make no move
 			if (isGameTied(g)) {

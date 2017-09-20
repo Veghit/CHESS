@@ -34,5 +34,5 @@ typedef struct command_t {
 bool equalStrings(const char* s1, const char *s2);
 SetCommand setting_parse(const char* str);
 SET_COMMAND game_settings(Game * g);
-int getNextWord(const char * s, char * word);
+
 #endif // !SetCommand_H_
