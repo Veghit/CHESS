@@ -22,7 +22,7 @@ typedef struct game_command_t {
 } GameCommand;
 
 GameCommand game_parse(const char* str);
-int getNextWord(const char * s, char * word);
+
 bool equalStrings(const char * s1, const char * s2);
 
 #endif //!GameCommand_H_

@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 	GAME_COMMAND gameCmd = GAME_MOVE;
 	SET_COMMAND setCmd = (SET_COMMAND) NULL;
 	Game * g = (Game*) calloc(1, sizeof(Game));
-	resetGame(g);// SAPIR -added a DIFF initialization
+	resetGame(g);
 	/**
 	 finished initializing new game
 	 starting to actually make the game run
@@ -35,40 +35,38 @@ int main(int argc, char *argv[]) {
 		// first of all receives/ checks the game/set command. if it is to quit, then quits.
 		if ((gameCmd == GAME_QUIT) || (setCmd == SET_QUIT)) {
 			printf("Exiting...\n");
-			free(moveStr);
-			deleteGame(g);
-			return 0;
+			return exit_game(g, moveStr);
 			// if a game is to begin, but not reset, we can theoretically play the game
-		} else if ((setCmd == SET_START) && (gameCmd != GAME_RESET) && (gameCmd != GAME_UNDO)) {
-			//think this should be after the lost check SAPIR
+		} else if ((setCmd == SET_START) && (gameCmd != GAME_RESET)
+				&& (gameCmd != GAME_UNDO)) {
 			// checks if the current player can make no move
 			if (isGameTied(g)) {
 				printBoard(g);
 				printf("The game is tied\n");
-				return 0;
+				return exit_game(g, moveStr);
 			}
 			int check = isGameChecked(g);
 			if (check == 1) {
 				if (currentLost(g)) {
-					printBoard(g);
+					//printBoard(g);
 					printf("Checkmate! black player wins the game\n");
-					getchar();
-					return 0;
+					return exit_game(g, moveStr);
 				} else {
 					printf("Check: white King is threatened!\n");
 				}
 			}
 			if (check == 0) {
 				if (currentLost(g)) {
-					printBoard(g);
+					//printBoard(g);
 					printf("Checkmate! white player wins the game\n");
-					getchar();
-					return 0;
+					return exit_game(g, moveStr);
 				} else {
 					printf("Check: black King is threatened!\n");
 				}
 
 			}
+			if (gameCmd==GAME_MOVE)
+				printBoard(g);
 			gameCmd = twoPlayersGame(g, moveStr);
 		} else if (gameCmd == GAME_RESET) {
 			printf("Restarting...\n");
@@ -78,11 +76,13 @@ int main(int argc, char *argv[]) {
 		} else if (gameCmd == GAME_UNDO) {
 			if (g->saves > 0) {
 				deleteGame(g);
-				g = cloneGame(lastGames[0]);
+				g = lastGames[0];
 				lastGames[0] = lastGames[1];
 				lastGames[1] = lastGames[2];
 				printf("%s", lastMoves[0]);
 				printf("%s", lastMoves[1]);
+				free(lastMoves[0]);
+				free(lastMoves[1]);
 				lastMoves[0] = lastMoves[2];
 				lastMoves[1] = lastMoves[3];
 				lastMoves[2] = lastMoves[4];
@@ -97,6 +97,17 @@ int main(int argc, char *argv[]) {
 			setCmd = game_settings(g);
 		}
 	}
-	getchar();
+	return exit_game(g, moveStr);
+}
+
+int exit_game(Game* g, char* moveStr) {
+	free(moveStr);
+	int i = 0;
+	for (i = 0; i < g->saves; i++) {
+		deleteGame(lastGames[i]);
+		free(lastMoves[2 * i]);
+		free(lastMoves[2 * i + 1]);
+	}
+	deleteGame(g);
 	return 0;
 }

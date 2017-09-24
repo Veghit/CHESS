@@ -7,7 +7,6 @@
 typedef struct game_t {
 	char gameBoard[8][8];
 	int currentPlayer;// THE ONE TO MAKE THE *NEXT* MOVE
-	int* boardHistory; //THIS IS NOT IN USE AT ALL?! SAPIR
 	int saves;
 	bool whiteRightCastle;
 	bool whiteLeftCastle;
@@ -250,9 +249,11 @@ bool isEmptyOrConquerable(Game* g, int row, int col, int color);
 bool isThreatened(Game * g, int arg);
 
 int castle(Game * g, int arg);
-
+void deleteGame(Game* g);
 bool canCastle(Game* g, int arg);
-
+void printValidMoves(Game * g, int arg);
+bool isThreatened(Game * g, int arg);
+int getColor(char c);
 void pawnPromotion(Game * g, int arg);
 
 /* END OF MOVES AND SUPPORTERS*/
@@ -264,19 +265,18 @@ FROM HERE NEED TO MAKE/ COMPLETE/ CORRECT*/
 @param g- the current game
 @param moveStr- regularly an empty string in the length of 1024
 @ret-
-
-*///TODO
+*/
 GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
+int exit_game(Game* g,char* moveStr);
+GameCommand pcMove(Game* g);
 
-void pcMove(Game* g);
+GameCommand MinimaxSuggestMove(Game* g);
 
-void MinimaxSuggestMove(Game* g, unsigned int maxDepth, char* chosenMove);
-
-int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int indexChosen[], char chosenMove[]);
+int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth, int indexChosen[], GameCommand* chosenMove);
 
 void intializeRest(char arr[][17], int len, int size, char* str);
 
-void listAllMoves(Game* g, int curPlayer,char allPossibleMoves[][17], int length, int size);
+void listAllMoves(Game* g,GameCommand allPossibleMoves[]);
 
 //void fixStrAndUpdate(char fromTo[][17], int index, char piece, int originRow, int originCol, int goalRow, int goalCol);
 
@@ -286,14 +286,12 @@ void printCharArr(char* arr, int len);
 
 void initializeSpecial(int* arr, int length, int jump);
 
-int calcLowest(Game* g, int depthOddity);
+int calcLowest(Game* g);
 
 int maxElem(int* arr, int length, int indexChosen[]);
 
 int minElem(int* arr, int length, int indexChosen[]);
-/* END OF INCLUDING MINMAX*/
 
-/* UNTILL HERE*/
 #endif //!Game_H_
 
 

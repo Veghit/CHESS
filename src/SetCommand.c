@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include "SetCommand.h"
 
-
 /**
  @ret
 
@@ -29,18 +28,18 @@ SET_COMMAND game_settings(Game * g) {
 		if (sp.cmd == SET_GAME_MODE) {
 			if (sp.validArg) {
 				if (sp.arg == 1) {
-					g->PLAYERS=1;
+					g->PLAYERS = 1;
 					printf("Game mode is set to 1 player\n");
 
 				} else {
-					g->PLAYERS=2;
+					g->PLAYERS = 2;
 					printf("Game mode is set to 2 players\n");
 				}
 			} else {
 				printf("Wrong game mode\n");
 			}
 		}
-		if ((sp.cmd == SET_DIFFICULTY) && (g->PLAYERS== 1)) {
+		if ((sp.cmd == SET_DIFFICULTY) && (g->PLAYERS == 1)) {
 			if (sp.validArg) {
 				if (sp.arg == 5) {
 					printf(
@@ -52,11 +51,11 @@ SET_COMMAND game_settings(Game * g) {
 				printf(
 						"Wrong difficulty level. The value should be between 1 to 5\n");
 		}
-		if ((sp.cmd == SET_USER_COLOR) && (g->PLAYERS== 1) && (sp.validArg)) {
-			g->USER_COLOR=sp.arg;
+		if ((sp.cmd == SET_USER_COLOR) && (g->PLAYERS == 1) && (sp.validArg)) {
+			g->USER_COLOR = sp.arg;
 		}
 		if (sp.cmd == SET_DEFAULT) {
-			g->USER_COLOR=1;
+			g->USER_COLOR = 1;
 			g->DIFF = 2;
 			g->PLAYERS = 1;
 		}
@@ -64,12 +63,15 @@ SET_COMMAND game_settings(Game * g) {
 			break;
 		}
 		if (sp.cmd == SET_PRINT_SETTING) {
-			if (g->PLAYERS== 1) {
-				printf("SETTINGS:\nGAME_MODE: 1\n");
+			if (g->PLAYERS == 1) {
+				printf("SETTINGS:\nGAME_MODE: 1\nDIFFICULTY_LVL: %d\n",
+						g->DIFF);
+				if (g->USER_COLOR == 1)
+					printf("USER_CLR: WHITE\n");
+				else
+					printf("USER_CLR: BLACK\n");
 			} else {
-				printf(
-						"SETTINGS:\nGAME_MODE: 2\nDIFFICULTY_LVL: %d\nUSER_CLR: %d\n",
-						g->DIFF, g->USER_COLOR);
+				printf("SETTINGS:\nGAME_MODE: 2\n");
 			}
 		}
 	}
@@ -136,4 +138,27 @@ SetCommand setting_parse(const char* str) {
 	return sp;
 }
 
-
+/**
+ gets the next word
+ @param s- the string from which the next word is taken
+ @param word- an empty string in which the next word is written to
+ @return
+ the last index of s, from which the word was taken
+ */
+int getNextWord(const char * s, char * word) {
+	int i = 0;
+	int j = 0;
+	while (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
+		i++;
+	}
+	while (s[i] != 0 && s[i] != ' ' && s[i] != '\t' && s[i] != '\n'
+			&& s[i] != '\r') {
+		word[j] = s[i];
+		i++;
+		j++;
+	}
+	word[j] = 0;
+	if (j == 0)
+		return 0;
+	return i;
+}

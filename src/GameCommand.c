@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include "SetCommand.h"
 #include "GameCommand.h"
 
 /**
@@ -22,6 +22,8 @@ GameCommand game_parse(const char* str) {
 		w4[a] = 0;
 	}
 	GameCommand sp;
+	sp.arg1 = 0;
+	sp.arg2 = 0;
 	GAME_COMMAND cmd = GAME_INVALID_LINE;
 	char *s1 = "move";
 	char *s2 = "get_moves";
@@ -80,31 +82,6 @@ GameCommand game_parse(const char* str) {
 	}
 	sp.cmd = cmd;
 	return sp;
-}
-
-/**
-gets the next word
-@param s- the string from which the next word is taken
-@param word- an empty string in which the next word is written to
-@return
-the last index of s, from which the word was taken
-*/
-int getNextWord(const char * s, char * word) {
-	int i = 0;
-	int j = 0;
-	while (s[i] == ' ' || s[i] == '\t' || s[i] == '\n' || s[i] == '\r') {
-		i++;
-	}
-	while (s[i] != 0 && s[i] != ' ' && s[i] != '\t' && s[i] != '\n'
-		&& s[i] != '\r') {
-		word[j] = s[i];
-		i++;
-		j++;
-	}
-	word[j] = 0;
-	if (j == 0)
-		return 0;
-	return i;
 }
 
 /** checks if 2 strings are equal
