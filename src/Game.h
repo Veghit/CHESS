@@ -5,6 +5,7 @@
 
 
 typedef struct game_t {
+	char mode;
 	char gameBoard[8][8];
 	int currentPlayer;// THE ONE TO MAKE THE *NEXT* MOVE
 	int saves;
@@ -67,7 +68,7 @@ resets the game's settings and board to a new game's settings
 
 
 *///TODO
-void resetGame(Game * g);
+void resetGame(Game * g, char mode);
 
 /**
 @param g- the current game

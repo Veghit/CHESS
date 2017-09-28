@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "Game.h"
-#include "SetCommand.h"
+
+#include"SetCommand.h"
 #include "limits.h"
 
 #ifndef CONSTS
@@ -198,18 +198,21 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 	if ((g->PLAYERS == 1) && (g->USER_COLOR != g->currentPlayer))
 		move = pcMove(g);
 	else {
-		if (g->currentPlayer == BLACK) {
-			printf("black player - enter your move:\n");
-		} else {
-			printf("white player - enter your move:\n");
+		if (g->mode == 'c') {
+			if (g->currentPlayer == BLACK) {
+				printf("black player - enter your move:\n");
+			}
+			else {
+				printf("white player - enter your move:\n");
+			}
+			//Receives the desirable move by the user
+			if (fgets(moveStr, 1024, stdin) == 0) {
+				free(lastMove);
+				deleteGame(tempClone);
+				return GAME_QUIT;
+			}
+			move = game_parse(moveStr);
 		}
-		//Receives the desirable move by the user
-		if (fgets(moveStr, 1024, stdin) == 0) {
-			free(lastMove);
-			deleteGame(tempClone);
-			return GAME_QUIT;
-		}
-		move = game_parse(moveStr);
 	}
 	if ((move.cmd == GAME_MOVE) || (move.cmd == GAME_CASTLE)
 			|| move.cmd == GAME_GET_MOVES) {
@@ -223,12 +226,15 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 			if ((color == WHITE && isWhite(piece))
 					|| ((color == BLACK) && isBlack(piece))) {
 				if (move.cmd == GAME_CASTLE) {
-					if ((piece != 'r') && (piece != 'R')) {
-						printf("Wrong position for a rook\n");
-						move.cmd = GAME_INVALID_LINE;
+					if (g->mode == 'c') {
+						if ((piece != 'r') && (piece != 'R')) {
+							printf("Wrong position for a rook\n");
+							move.cmd = GAME_INVALID_LINE;
+						}
 					}
 					if (canCastle(g, move.arg1) == false) {
-						printf("Illegal castling move\n");
+						if(g->mode=='c')
+							printf("Illegal castling move\n");
 						move.cmd = GAME_INVALID_LINE;
 					} else {
 						castle(g, move.arg1);
@@ -237,30 +243,37 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 				}
 				if (move.cmd == GAME_MOVE) {
 					if (-1 == makeMove(g, move.arg1, move.arg2)) {
-						printf("Illegal move\n");
+						if (g->mode == 'c')
+							printf("Illegal move\n");
 						move.cmd = GAME_INVALID_LINE;
 					} else {
-						if (((piece == 'M') && (row2 == 0))
+						if (g->mode == 'c') {
+							if (((piece == 'M') && (row2 == 0))
 								|| ((piece == 'm') && (row2 == 7)))
-							pawnPromotion(g, move.arg2);
+								pawnPromotion(g, move.arg2);
+						}
 						validMove = true;
 
 					}
 				}
 				if (move.cmd == GAME_GET_MOVES) {
 					int arg = move.arg1;
-					printValidMoves(g, arg);
+					if (g->mode == 'c')
+						printValidMoves(g, arg);
 				}
 
 			} else {
-				printf("The specified position does not contain your piece\n");
+				if (g->mode == 'c')
+					printf("The specified position does not contain your piece\n");
 				move.cmd = GAME_INVALID_LINE;
 			}
 		} else {
-			printf("Invalid position on the board\n");
+			if (g->mode == 'c')
+				printf("Invalid position on the board\n");
 			move.cmd = GAME_INVALID_LINE;
 		}
 	}
+	//TODO not entirely sure if should put it under an if(g->mode=='c') or not
 	if (validMove) {
 		if (move.cmd == GAME_MOVE) {
 			if (g->currentPlayer == WHITE)
@@ -318,10 +331,11 @@ void pawnPromotion(Game * g, int arg) {
 	char *s4 = "bishop";
 	char *s5 = "pawn";
 	while (true) {
-		printf(
-				"Pawn promotion- please replace the pawn by queen, rook, knight, bishop or pawn:\n");
-		while (fgets(string, 1024, stdin) == 0) {
-			fgets(string, 1024, stdin);
+		if (g->mode == 'c') {
+			printf("Pawn promotion- please replace the pawn by queen, rook, knight, bishop or pawn:\n");
+			while (fgets(string, 1024, stdin) == 0) {
+				fgets(string, 1024, stdin);
+			}
 		}
 		for (int a = 0; a < 30; a++) {
 			w1[a] = 0;
@@ -339,7 +353,8 @@ void pawnPromotion(Game * g, int arg) {
 		} else if (equalStrings(w1, s5)) {
 			piece = 'm';
 		} else {
-			printf("Invalid Type\n");
+			if (g->mode == 'c')
+				printf("Invalid Type\n");
 		}
 		if (piece != 0) {
 			if (g->currentPlayer == BLACK)
@@ -359,7 +374,8 @@ void pawnPromotion(Game * g, int arg) {
 
 
  */
-void resetGame(Game * g) {
+void resetGame(Game * g, char mode) {
+	g->mode = mode;
 	g->currentPlayer = WHITE;
 	g->blackLeftCastle = true;
 	g->blackRightCastle = true;
@@ -966,6 +982,7 @@ void printBoard(Game * g) {
 
 Game * cloneGame(Game* g) {
 	Game * g2 = (Game*) calloc(1, sizeof(Game));
+	g2->mode = g->mode;
 	g2->DIFF = g->DIFF;
 	g2->PLAYERS = g->PLAYERS;
 	g2->saves = g->saves;
@@ -989,16 +1006,19 @@ GameCommand MinimaxSuggestMove(Game* g) {
 	int maxDepth = g->DIFF;
 	GameCommand move;
 	if (maxDepth > 5) {
-		printf("wrong maxDepth");
+		if (g->mode == 'c')
+			printf("wrong maxDepth");
 		return move;
 	}
 	if (g == NULL || maxDepth <= 0) {
-		printf("wrong param vals");
+		if (g->mode == 'c')
+			printf("wrong param vals");
 		return move;
 	}
 	Game * clone = cloneGame(g);
 	if (clone == NULL) {
-		printf("wrong -didnt manage to clone");
+		if (g->mode == 'c')
+			printf("wrong -didnt manage to clone");
 		return move;
 	}
 
