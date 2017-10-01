@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #include "SetCommand.h"
-#include "limits.h"
+#include <limits.h>
 
 #ifndef CONSTS
 const int WHITE = 1;
@@ -1091,7 +1091,9 @@ GameCommand MinimaxSuggestMove(Game* g) {
 	}
 	create_Tree(clone, maxDepth, 0, indexChosen, chosenMove, INT_MIN, INT_MAX);
 	deleteGame(clone);
-	return (*chosenMove);
+	GameCommand ret = *chosenMove;
+	free(chosenMove);
+	return ret;
 
 }
 int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth,
@@ -1113,8 +1115,10 @@ int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth,
 		return 0;
 	}
 	listAllMoves(curGame, allPossibleMoves);
-	if (allPossibleMoves[0].validArg == false)
+	if (allPossibleMoves[0].validArg == false) {
+		free(allPossibleMoves);
 		return calcLowest(curGame);
+	}
 
 	int j;
 	int tempScore;
@@ -1179,6 +1183,7 @@ int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth,
 
 	}
 	*chosenMove = allPossibleMoves[tempMove];
+	free(allPossibleMoves);
 	//printf("\nCHOSEN: %d => %d SCORE:%d\n", allPossibleMoves[tempMove].arg1,
 	//		allPossibleMoves[tempMove].arg2, v);
 	return v;

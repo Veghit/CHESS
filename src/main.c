@@ -7,6 +7,7 @@
 
 void fixGui() {
 	/*Returns 0 on success or a negative error code on failure;*/
+
 	printf("entered fixGui\n");
 	Game * g = (Game*) calloc(1, sizeof(Game));
 	g->mode = 'g';
@@ -17,7 +18,7 @@ void fixGui() {
 		/*Use this function to retrieve a message about the last error that occurred.
 		 an empty string if there hasn't been an error message set,
 		 since the last call to this func */
-		printf("entereed 	if (SDL_Init(SDL_INIT_VIDEO) < 0) \n ");
+		printf("entered 	if (SDL_Init(SDL_INIT_VIDEO) < 0) \n ");
 		return;
 	}
 	GuiManager* manager = ManagerCreate();
@@ -42,6 +43,7 @@ void fixGui() {
 	}
 	ManagerDestroy(manager);
 	SDL_Quit();
+	deleteGame(g);
 
 }
 /**
@@ -152,30 +154,30 @@ int main(int argc, char *argv[]) {
 }
 
 Game * game_undo(Game * g) {
+	int saves = g->saves;
 	if (g->PLAYERS == 1) {
-		if (g->saves > 0) {
+		if (saves > 0) {
 			deleteGame(g);
-			g = lastGames[0];
+			g = cloneGame(lastGames[0]);
+
+			if(g->saves>0)
+				g->saves = saves-1;
 			printf("%s", lastMoves[0]);
 			printf("%s", lastMoves[1]);
+			deleteGame(lastGames[0]);
 			free(lastMoves[0]);
 			free(lastMoves[1]);
-			if (g->saves > 1) {
-				lastGames[0] = lastGames[1];
-				lastMoves[0] = lastMoves[2];
-				lastMoves[1] = lastMoves[3];
-				if (g->saves > 2) {
-					lastGames[1] = lastGames[2];
-					lastMoves[2] = lastMoves[4];
-					lastMoves[3] = lastMoves[5];
-				}
-			}
-			g->saves -= 1;
+			lastGames[0] = lastGames[1];
+			lastMoves[0] = lastMoves[2];
+			lastMoves[1] = lastMoves[3];
+			lastGames[1] = lastGames[2];
+			lastMoves[2] = lastMoves[4];
+			lastMoves[3] = lastMoves[5];
 		} else {
 			printf("Empty history, move cannot be undone\n");
 		}
 	} else {
-		printf("Undo command not avaialbe in 2 players mode\n");
+		printf("Undo command not possible in 2 players mode\n");
 	}
 	return g;
 }
