@@ -1,7 +1,7 @@
 #include "ChessGUIManager.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+/*for drag and drop*/
 char piece[1] = { '0' };
 int draggedOriginsCurDest[7] = { 0, -1, -1, -1, -1, -1, -1 };
 
@@ -17,6 +17,7 @@ GuiManager* ManagerCreate() {
 	}
 	res->activeWin = MAIN_WINDOW_ACTIVE;
 	res->gameWin = NULL;
+	res->loadWin = NULL;
 	res->nextSave = 1;
 	return res;
 }
@@ -46,8 +47,7 @@ void ManagerDraw(GuiManager* src, Game* g) {
 		GameWindowDraw(src->gameWin, draggedOriginsCurDest, piece, g);
 	}
 }
-MANAGER_EVENET handleManagerDueToMainEvent(GuiManager* src, MAIN_EVENT event,
-		Game * g) {
+MANAGER_EVENET handleManagerDueToMainEvent(GuiManager* src, MAIN_EVENT event,Game * g) {
 	if (src == NULL) {
 		return MANAGER_NONE;
 	}
@@ -57,7 +57,7 @@ MANAGER_EVENET handleManagerDueToMainEvent(GuiManager* src, MAIN_EVENT event,
 		src->loadWin = loadWindowCreate();
 		if (src->loadWin == NULL) {
 			printf("couldn't create load window \n");
-			return MANAGER_QUTT;
+			return MANAGER_QUIT;
 		}
 		src->loadWin->loadFromMainMenu = 1;
 		src->activeWin = LOAD_WINDOW_ACTIVE;
@@ -69,17 +69,12 @@ MANAGER_EVENET handleManagerDueToMainEvent(GuiManager* src, MAIN_EVENT event,
 		src->gameWin = GameWindowCreate();
 		if (src->gameWin == NULL) {
 			printf("Couldn't create game window\n");
-			return MANAGER_QUTT;
+			return MANAGER_QUIT;
 		}
-
-		//since the game window activated fine, the now active window in src is that
 		src->activeWin = GAME_WINDOW_ACTIVE;
 		break;
-		//but now the received event should be checked
-		//since even if the game started correctly, suppose the person wanted out
-		//since the main window, and pressed on it, then out we go
 	case MAIN_EXIT:
-		return MANAGER_QUTT;
+		return MANAGER_QUIT;
 	default:
 		break;
 	}
@@ -135,7 +130,7 @@ MANAGER_EVENET handleManagerDueToLoadEvent(GuiManager* src, LOAD_EVENT event,
 		src->gameWin = GameWindowCreate();
 		if (src->gameWin == NULL) {
 			printf("Couldn't create game window\n");
-			return MANAGER_QUTT;
+			return MANAGER_QUIT;
 		}
 		src->activeWin = GAME_WINDOW_ACTIVE;
 		break;
@@ -258,13 +253,12 @@ MANAGER_EVENET handleManagerDueToGameEvent(GuiManager* src, GAME_EVENT event, Ga
 		src->loadWin = loadWindowCreate();
 		if (src->loadWin == NULL) {
 			printf("couldn't create load window \n");
-			return MANAGER_QUTT;
+			return MANAGER_QUIT;
 		}
 		src->loadWin->loadFromGame = 1;
 		src->activeWin = LOAD_WINDOW_ACTIVE;
 	} else {
-		if (event == GAME_EVENT_EXIT || event == GAME_EVENT_MAIN_MENU
-				|| event == GAME_EVENT_QUIT) {
+		if (event == GAME_EVENT_EXIT || event == GAME_EVENT_MAIN_MENU|| event == GAME_EVENT_QUIT) {
 			GameWindowDestroy(src->gameWin);
 			src->gameWin = NULL;
 			src->activeWin = MAIN_WINDOW_ACTIVE;
@@ -278,7 +272,7 @@ MANAGER_EVENET handleManagerDueToGameEvent(GuiManager* src, GAME_EVENT event, Ga
 
 MANAGER_EVENET ManagerHandleEvent(GuiManager* src, SDL_Event* event, Game* g) {
 	//print_settings(g);
-
+	MANAGER_EVENET mngEve=MANAGER_NONE;
 	if (src == NULL || event == NULL) {
 		return MANAGER_NONE;
 	}
@@ -286,19 +280,20 @@ MANAGER_EVENET ManagerHandleEvent(GuiManager* src, SDL_Event* event, Game* g) {
 	if (src->activeWin == MAIN_WINDOW_ACTIVE) {
 		MAIN_EVENT mainEvent = MainWindowHandleEvent(src->mainWin, event, g);
 		ManagerDraw(src, g);
-		return handleManagerDueToMainEvent(src, mainEvent, g);
+		mngEve= handleManagerDueToMainEvent(src, mainEvent, g);
 	}
 	if (src->activeWin == LOAD_WINDOW_ACTIVE) {
 		LOAD_EVENT loadEvent = loadWindowHandleEvent(src->loadWin, event);
 		ManagerDraw(src, g);
-		return handleManagerDueToLoadEvent(src, loadEvent, g);
+		mngEve =handleManagerDueToLoadEvent(src, loadEvent, g);
 	}
 	if (src->activeWin == GAME_WINDOW_ACTIVE) {
-		GAME_EVENT gameEvent = GameWindowHandleEvent(src->gameWin, event,
-				draggedOriginsCurDest, piece, g);
+		GAME_EVENT gameEvent = GameWindowHandleEvent(src->gameWin, event,draggedOriginsCurDest, piece, g);
 		ManagerDraw(src, g);
-		return handleManagerDueToGameEvent(src, gameEvent, g);
+		mngEve= handleManagerDueToGameEvent(src, gameEvent, g);
 	}
+	if (mngEve == MANAGER_QUIT)
+		ManagerDestroy(src);
 	return MANAGER_NONE;
 }
 

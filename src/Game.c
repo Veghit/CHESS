@@ -456,7 +456,9 @@ void resetGame(Game * g) {
 }
 /*
 @param g- game
-@param arg- the place of the rook*/
+@param arg- the place of the rook
+returns true if the rook can castle the king
+false otherwise*/
 bool canCastle(Game* g, int arg) {
 	if ((arg == 0) || (arg == 7) || (arg == 56) || (arg == 63)) {
 	} else
@@ -1310,9 +1312,7 @@ int calcLowest(Game* g) {
 
 	return evalWHITE - evalBLACK;
 }
-/*
-@param g- existing game with existing settings
-keeps all the initial settings and resets everything else*/
+
 void restartGame(Game*g) {
 	char board[64]= { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'm', 'm', 'm', 'm',
 		'm', 'm', 'm', 'm', '_', '_', '_', '_', '_', '_', '_', '_', '_',

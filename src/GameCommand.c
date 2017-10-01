@@ -9,7 +9,7 @@
  @param str- receives a line
  @ret-
 
- */
+
 GameCommand game_parse(const char* str) {
 	char w1[30];
 	char w2[30];
@@ -93,13 +93,7 @@ GameCommand game_parse(const char* str) {
 	return sp;
 }
 
-/** checks if 2 strings are equal
- @param s1- first string to check
- @param s2- second string to check
- @return
- false if by some character the strings differ
- true if they are exactly the same
- */
+
 bool equalStrings(const char * s1, const char * s2) {
 	for (; *s1 == *s2; ++s1, ++s2) {
 		if (*s1 == 0)

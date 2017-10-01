@@ -378,14 +378,12 @@ void createGameToMainMenuButtons(GameWin* res, SDL_Surface* loadingSurface) {
 	SDL_FreeSurface(loadingSurface);
 }
 GameWin* GameWindowCreate() {
-	printf("int game window create\n");
 	GameWin* res = (GameWin*) calloc(sizeof(GameWin), sizeof(char));
 	SDL_Surface* loadingSurface = NULL; //Used as temp surface
 	if (res == NULL) {
 		printf("Couldn't create  GameWin struct\n");
 		return NULL;
 	}
-	/* TODO in the original, res->game was all about creating a new game, hence*/
 	Game* g = (Game*) malloc(sizeof(Game));
 	resetGame(g);
 	res->game = g;
@@ -519,16 +517,17 @@ void GameWindowDestroy(GameWin* src) {
 	}
 	free(src);
 }
-/*TODO update the "TODO VERY IMPORTANT" part
- this is where the current state of the game is drawn*/
-void GameWindowDraw(GameWin* src, int draggedOriginsCurDest[],
-		char movingPiece[], Game * g) {
-	char piece = '0';
 
+void GameWindowDraw(GameWin* src, int draggedOriginsCurDest[],char movingPiece[], Game * g) {
+	char piece = '0';
 	if (src == NULL) {
 		return;
 	}
+<<<<<<<
 
+=======
+
+>>>>>>>
 	SDL_Rect rec = { .x = 0, .y = 0, .w = 900, .h = 608 };
 	SDL_Rect recRestart = { .x = 600, .y = 10, .w = 100, .h = 70 };
 	SDL_Rect recSave = { .x = 600, .y = 112, .w = 100, .h = 70 };
@@ -545,22 +544,12 @@ void GameWindowDraw(GameWin* src, int draggedOriginsCurDest[],
 	SDL_RenderCopy(src->renderer, src->saveTexture, NULL, &recSave);
 	SDL_RenderCopy(src->renderer, src->undoTexture, NULL, &recUndo);
 	SDL_RenderCopy(src->renderer, src->mainMenuTexture, NULL, &recMainMenu);
-
-	/*TODO VERY IMPORTANT 
-	 this should be done only after checking the move
-	 AND we need to change the place of the piece to the goal place
-	 POSSIBLY DO ALL THIS IN A FUNC, AND CHANGE FOR DRAG N DROP ABILITIES N SUCH
-	 apparently this is only supposed to check and update("paste") the current game board
-	 in the gui mode*/
 	int i = 0, j = 0;
-	for (i = 0; i < 8; i++) { //TODO CHANGED N_ROWS AND N_COLUMNS into 8
+	for (i = 0; i < 8; i++) { 
 		for (j = 0; j < 8; j++) {
-			/*TODO i need to make adjustments to the origins, curs and dests 
-			 so they'd actually match the i and j on a console board*/
 			rec.h = 71;
 			rec.w = 65;
-			if ((draggedOriginsCurDest[0] == 0) || ( (j != 7-((draggedOriginsCurDest[2]-22)/71))
-					|| ((draggedOriginsCurDest[1]-22)/66 != i))) {
+			if ((movingPiece[0]=='0' || draggedOriginsCurDest[0] == 0) || ( (j != 7-((draggedOriginsCurDest[2]-22)/71)) || ((draggedOriginsCurDest[1]-22)/66 != i))) {
 				rec.x = 20 + (j * 66);
 				rec.y = 22 + ((7 - i) * 71);
 				piece = g->gameBoard[i][j];
@@ -575,69 +564,52 @@ void GameWindowDraw(GameWin* src, int draggedOriginsCurDest[],
 					rec.y = draggedOriginsCurDest[6];
 					draggedOriginsCurDest[5] = -1;
 					draggedOriginsCurDest[6] = -1;
-					
 				}
-				
 			}
 			switch (piece) {
-
 			case 'r':
-				SDL_RenderCopy(src->renderer, src->whiteRookTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->whiteRookTexture, NULL,	&rec);
 				break;
 			case 'R':
-				SDL_RenderCopy(src->renderer, src->blackRookTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->blackRookTexture, NULL,&rec);
 				break;
 			case 'm':
-				SDL_RenderCopy(src->renderer, src->whitePawnTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->whitePawnTexture, NULL,&rec);
 				break;
 			case 'M':
-				SDL_RenderCopy(src->renderer, src->blackPawnTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->blackPawnTexture, NULL,&rec);
 				break;
 			case 'n':
-				SDL_RenderCopy(src->renderer, src->whiteKnightTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->whiteKnightTexture, NULL,&rec);
 				break;
 			case 'N':
-				SDL_RenderCopy(src->renderer, src->blackKnightTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->blackKnightTexture, NULL,&rec);
 				break;
 			case 'b':
-				SDL_RenderCopy(src->renderer, src->whiteBishopTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->whiteBishopTexture, NULL,&rec);
 				break;
 			case 'B':
-				SDL_RenderCopy(src->renderer, src->blackBishopTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->blackBishopTexture, NULL,&rec);
 				break;
 			case 'q':
-				SDL_RenderCopy(src->renderer, src->whiteQueenTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->whiteQueenTexture, NULL,&rec);
 				break;
 			case 'Q':
-				SDL_RenderCopy(src->renderer, src->blackQueenTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->blackQueenTexture, NULL,&rec);
 				break;
 			case 'k':
-				SDL_RenderCopy(src->renderer, src->whiteKingTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->whiteKingTexture, NULL,&rec);
 				break;
 			case 'K':
-				SDL_RenderCopy(src->renderer, src->blackKingTexture, NULL,
-						&rec);
+				SDL_RenderCopy(src->renderer, src->blackKingTexture, NULL,&rec);
+				break;
+			case '_':
 				break;
 			}
 		}
 	}
 	SDL_RenderPresent(src->renderer);
 }
-
-/*TODO update this entire func
- this is where the "fun" happens. the actual game.*/
-
 GAME_EVENT GameWindowHandleEvent(GameWin* src, SDL_Event* event,
 		int draggedOriginsCurDest[], char piece[], Game* g) {
 	if (event == NULL || src == NULL) {
@@ -650,18 +622,17 @@ GAME_EVENT GameWindowHandleEvent(GameWin* src, SDL_Event* event,
 				if (g->PLAYERS == 2 || g->USER_COLOR == g->currentPlayer) {
 					draggedOriginsCurDest[1] = event->button.x;
 					draggedOriginsCurDest[2] = event->button.y;
-					draggedOriginsCurDest[3] = event->button.x;
-					draggedOriginsCurDest[4] = event->button.y;
+					draggedOriginsCurDest[3] = event->button.x-33;
+					draggedOriginsCurDest[4] = event->button.y-35;
 					draggedOriginsCurDest[0] = 1;
 					if ((event->button.y >= 22) && (event->button.y <= 588) && (event->button.x >= 22) && (event->button.x <= 548)) {
 						int row = 7 - (event->button.y - 22) / 71;
 						int col = (event->button.x - 22) / 66;
-						//printf("\n%d,%d\n", row, col);
 						if (isColor(g->gameBoard[row][col], g->currentPlayer)) {
 							piece[0] = g->gameBoard[row][col];
 						}
 						else
-							printf("not your turn\n");
+							SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "watch it!", "not your turn", NULL);
 					}
 					return GAME_EVENT_PIECE_CHOSEN;
 				}
@@ -671,7 +642,6 @@ GAME_EVENT GameWindowHandleEvent(GameWin* src, SDL_Event* event,
 	case SDL_MOUSEBUTTONUP:
 		if (event->button.button == SDL_BUTTON_LEFT) {
 			if (piece[0] != '0') {
-				printf("BUTTON UP\n");
 				draggedOriginsCurDest[5] = event->button.x;
 				draggedOriginsCurDest[6] = event->button.y;
 				draggedOriginsCurDest[3] = event->button.x;
@@ -680,10 +650,7 @@ GAME_EVENT GameWindowHandleEvent(GameWin* src, SDL_Event* event,
 				int destCol = (event->button.x - 22) / 66;
 				int originRow = 7 - (draggedOriginsCurDest[2] - 22) / 71;
 				int originCol = (draggedOriginsCurDest[1] - 22) / 66;
-				if(originRow==0)
-					printf("\n<%d,%d> => <%d,%d> \n", originRow, originCol, destRow, destCol);
 				if (-1 != makeMove(g, originRow * 8 + originCol, destRow * 8 + destCol)) {
-					//printf("good move");
 					g->currentPlayer = 1 - g->currentPlayer;
 					if (isGameTied(g)) {
 						return GAME_EVENT_TIE;
@@ -712,14 +679,11 @@ GAME_EVENT GameWindowHandleEvent(GameWin* src, SDL_Event* event,
 				}
 				else//TODO 1. upon almost any 1st move, prints this for some reason
 					//2. doesnt print it when the one who's turn it's not, tries to make a move
-					//SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Oopsie!", "bad move!", NULL);
-					printf("bad move");
-				//printBoard(g);
+					SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Oopsie!", "bad move!", NULL);
 				draggedOriginsCurDest[0] = 0;
 				piece[0] = '0';
 				draggedOriginsCurDest[1] = -1;
 				draggedOriginsCurDest[2] = -1;
-				//printBoard(g);
 				return GAME_EVENT_PIECE_CHOSEN;
 			}
 		}
@@ -771,7 +735,9 @@ return GAME_EVENT_NONE;
 
 
 void nullifyHelpingArrays(int arr[], int length, char arr2[], int arr2Len) {
-  for (int i = 0; i < length; i++) {
+	arr[0] = 0;
+	arr2[0] = '0';
+  for (int i = 1; i < length; i++) {
     arr[i] =-1;
     if (i < arr2Len)
       arr2[i] = '0';
@@ -780,7 +746,7 @@ void nullifyHelpingArrays(int arr[], int length, char arr2[], int arr2Len) {
     arr2[j] = '0';
   }
 }
-/*everything is reset, but the mode*/
+
 void backToMainMenu(Game* g) {
 	char board[64] = { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'm', 'm', 'm', 'm',
 		'm', 'm', 'm', 'm', '_', '_', '_', '_', '_', '_', '_', '_', '_',

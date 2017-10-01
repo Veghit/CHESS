@@ -3,7 +3,6 @@
 #include <SDL.h>
 #include "../SetCommand.h"
 
-/*TODO not entirely sure i need all of those different events*/
 typedef enum {
 	MAIN_EXIT,
 	MAIN_NEWGAME,/*IF THIS IS PRESSED, changes screen accordingly*/ 
@@ -51,7 +50,9 @@ typedef struct {
 
 	/*next "window" is where u choose num players*/
 	SDL_Texture* onePlayerTexture;
+	SDL_Texture* onePlayerChosen;
 	SDL_Texture* twoPlayerTexture;
+	SDL_Texture* twoPlayerChosen;
 	SDL_Texture* backFromNumPlayersTexture;/*can always be pressed*/
 	/*according to the user's choice, start or next appears*/
 	SDL_Texture* startFromNumPlayersTexture;
@@ -64,9 +65,13 @@ typedef struct {
 	/*if next was pressed, we go on to diff "window"*/
 	SDL_Texture* backFromDiffTexture;/*can always be pressed*/
 	SDL_Texture* noobTexture;
+	SDL_Texture* noobChosen;
 	SDL_Texture* easyTexture;
+	SDL_Texture* easyChosen;
 	SDL_Texture* moderateTexture;
+	SDL_Texture* moderateChosen;
 	SDL_Texture* hardTexture;
+	SDL_Texture* hardChosen;
 	/*can only be pressed after a difficulty was chosen*/
 	SDL_Texture* nextToColorWinTexture;
 	int diffPressed;/*if this is pressed, shows next button*/
@@ -77,7 +82,9 @@ typedef struct {
 	/*if nextToColorWin was pressed, we go on to color "window" */
 	SDL_Texture* backFromColorTexture; /*can always be pressed*/
 	SDL_Texture* blackTexture;
+	SDL_Texture* blackChosen;
 	SDL_Texture* whiteTexture;
+	SDL_Texture* whiteChosen;
 	/*can only be pressed after a difficulty was chosen*/
 	SDL_Texture* startFromColorTexture;
 	int colorPressed;/*if this is pressed, shows start button*/
@@ -91,6 +98,12 @@ typedef struct {
 } MainWin;
 
 /*CLICKS*/
+/*THIS IS A DOC FOR ALL CLICKS*/
+/**
+/*@param x- the x coordinate of the mouse when the button is up
+@param y-the x coordinate of the mouse when the button is up
+returns 1 if the click was on the "button" coordinates
+and 0 otherwise*/
 
 int isClickOnBack(int x, int y);
 int isClickOnStart(int x, int y);
@@ -103,12 +116,44 @@ int isClickOnLoad(int x, int y);
 int isClickOnExit(int x, int y);
 
 /*GUI HANDLERS*/
+/**
+@param src- the mainWin as is
+puts 0 in all of the int fields of src*/
 void MainWinNullifyIntSet(MainWin* src);
+/*THIS IS A DOC FOR ALL VOID CREATES*/
+/**@param loadingSurface- an empty/clear surface
+@param res- mainwindow
+updates different fields in mainwindow, so could be used for later
+according to the name of the func*/
+void createMainMenuButtons(SDL_Surface* loadingSurface, MainWin* res);
+void createGeneralButtons(SDL_Surface* loadingSurface, MainWin* res);
+void createNumPlayersButtons(SDL_Surface* loadingSurface, MainWin* res);
+void createDifficultyButtons(SDL_Surface* loadingSurface, MainWin* res);
+void createLast2DiffButtons(SDL_Surface* loadingSurface, MainWin* res);
+void createColorButtons(SDL_Surface* loadingSurface, MainWin* res);
+/**
+creates a main window with all the settings and it's fields
+@ret- the main window created
+*/
 MainWin* MainWindowCreate();
+
 void MainWindowDraw(MainWin* src);
+/*@param src- the mainwin object
+destroys any of the fields that were allocated memory*/
 void MainWindowDestroy(MainWin* src);
+/*@param src- the main window
+hides it if shown*/
 void MainWindowHide(MainWin* src);
+/**
+@param src- the main window
+shows it if hidden*/
 void MainWindowShow(MainWin* src);
+/**
+@param src- the main window
+@param event- sdl event that occured in the main window
+@param g- the current game, if there's one, for main to "refresh"
+updates the game settings in accordance to the buttons pressed by the user
+@returns the event in accordance to the user's choice*/
 MAIN_EVENT MainWindowHandleEvent(MainWin* src, SDL_Event* event,Game* g);
 
 #endif
