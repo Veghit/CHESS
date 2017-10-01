@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "SetCommand.h"
-
+#include "GameCommand.h"
 
 /**
  @param str- receives a line
@@ -63,6 +63,15 @@ GameCommand game_parse(const char* str) {
 		}
 	} else if (equalStrings(w1, s3)) {
 		cmd = GAME_SAVE;
+		sp.arg3 = (char *) calloc(100, sizeof(char));
+		if (sp.arg3 == NULL) {
+			printf("ERROR in memory allocation.");
+			sp.cmd = GAME_INVALID_LINE;
+			return sp;
+		}
+		strcpy(sp.arg3, w2);
+		if (w2[0] != 0)
+			sp.validArg = true;
 	} else if (equalStrings(w1, s4)) {
 		cmd = GAME_UNDO;
 	} else if (equalStrings(w1, s5)) {

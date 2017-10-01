@@ -19,6 +19,7 @@ typedef struct game_command_t {
 	bool validArg; //is set to true if the line contains a valid argument
 	int arg1;
 	int arg2;
+	char * arg3;
 } GameCommand;
 
 GameCommand game_parse(const char* str);

@@ -9,9 +9,12 @@
 
  */
 SET_COMMAND game_settings(Game * g) {
-
 	SetCommand sp;
 	char * string = (char*) calloc(1024, sizeof(char));
+	if (string == NULL) {
+		printf("ERROR in memory allocation.");
+		return SET_INVALID_LINE;
+	}
 	printf(
 			"Specify game setting or type 'start' to begin a game with the current setting:\n");
 	while (true) {
@@ -63,20 +66,39 @@ SET_COMMAND game_settings(Game * g) {
 			break;
 		}
 		if (sp.cmd == SET_PRINT_SETTING) {
-			if (g->PLAYERS == 1) {
-				printf("SETTINGS:\nGAME_MODE: 1\nDIFFICULTY_LVL: %d\n",
-						g->DIFF);
-				if (g->USER_COLOR == 1)
-					printf("USER_CLR: WHITE\n");
-				else
-					printf("USER_CLR: BLACK\n");
+			print_settings(g);
+		}
+		if (sp.cmd == SET_LOAD) {
+			Game* loadedGame = (Game *) calloc(1, sizeof(Game));
+			if (loadedGame == NULL) {
+				printf("ERROR in memory allocation.");
+				sp.cmd = SET_INVALID_LINE;
+
+			} else if (xml_load(loadedGame, sp.arg2)) {
+				deleteGame(g);
+				g = cloneGame(loadedGame);
+				deleteGame(loadedGame);
 			} else {
-				printf("SETTINGS:\nGAME_MODE: 2\n");
+				printf("Eror: File doesn’t exist or cannot be opened\n");
+				deleteGame(loadedGame);
 			}
 		}
 	}
 	free(string);
 	return sp.cmd;
+}
+
+void print_settings(Game* g) {
+	if (g->PLAYERS == 1) {
+
+		printf("SETTINGS:\nGAME_MODE: 1\nDIFFICULTY_LVL: %d\n", g->DIFF);
+		if (g->USER_COLOR == 1)
+			printf("USER_CLR: WHITE\n");
+		else
+			printf("USER_CLR: BLACK\n");
+	} else {
+		printf("SETTINGS:\nGAME_MODE: 2\n");
+	}
 }
 
 /**
@@ -125,6 +147,13 @@ SetCommand setting_parse(const char* str) {
 		}
 	} else if (equalStrings(w1, s4)) {
 		cmd = SET_LOAD;
+		sp.arg2 = (char *) calloc(100, sizeof(char));
+		if (sp.arg2 == NULL) {
+			printf("ERROR in memory allocation\n");
+			sp.cmd = SET_INVALID_LINE;
+			return sp;
+		}
+		strcpy(sp.arg2, w2);
 	} else if (equalStrings(w1, s5)) {
 		cmd = SET_DEFAULT;
 	} else if (equalStrings(w1, s6)) {
@@ -161,4 +190,87 @@ int getNextWord(const char * s, char * word) {
 	if (j == 0)
 		return 0;
 	return i;
+}
+
+bool xml_tag(char* tag, char*s) {
+	int start = 0;
+	while (tag[start] != '<')
+		start += 1;
+	int i = 0;
+	while (tag[1 + start + i] == s[i])
+		i += 1;
+	return ((tag[1 + start + i] == '>') && (s[i] == 0));
+}
+
+bool xml_load(Game * g, char * path) {
+	FILE *fp;
+	bool valid = true;
+	fp = fopen(path, "r");
+	if (fp == NULL)
+		return false;
+	char line[256];
+	char * s1 = "current_turn";
+	char * s2 = "game_mode";
+	char * s3 = "difficulty";
+	char * s4 = "user_color";
+	char * s5 = "board";
+	resetGame(g);
+	while (fgets(line, sizeof(line), fp)) {
+		int data_index = xml_get_index(line, 256);
+		if (xml_tag(line, s1)) {
+			int cur = (int) (line[data_index] - '0');
+			if ((cur == 1) || (cur == 0)) {
+				g->currentPlayer = cur;
+			} else
+				valid = false;
+		} else if (xml_tag(line, s2)) {
+			int mode = (int) (line[data_index] - '0');
+			if ((mode == 1) || (mode == 2)) {
+				g->PLAYERS = mode;
+			} else
+				valid = false;
+		} else if (xml_tag(line, s3)) {
+			int diff = (int) (line[data_index] - '0');
+			if ((diff >= 1) && (diff <= 4)) {
+				g->DIFF = diff;
+			} else
+				valid = false;
+		} else if (xml_tag(line, s4)) {
+			int color = (int) (line[data_index] - '0');
+			if ((color == 1) || (color == 0)) {
+				g->USER_COLOR = color;
+			} else
+				valid = false;
+		} else if (xml_tag(line, s5)) {
+			int i, j;
+			for (i = 0; i < 8; i++) {
+				fgets(line, sizeof(line), fp);
+				data_index = xml_get_index(line, 256);
+				for (j = 0; j < 8; j++) {
+					char c = line[data_index + j];
+					if ((c == 'm') || (c == 'r') || (c == 'n') || (c == 'b')
+							|| (c == 'q') || (c == 'k') || (c == '_')
+							|| (c == 'M') || (c == 'R') || (c == 'N')
+							|| (c == 'B') || (c == 'Q') || (c == 'K'))
+						g->gameBoard[7 - i][j] = c;
+					else {
+						valid = false;
+						break;
+					}
+
+				}
+			}
+		}
+	}
+	fclose(fp);
+	return valid;
+}
+
+int xml_get_index(char * s, int size) {
+	int i = 0;
+	for (i = 0; i < size; i++) {
+		if (s[i] == '>')
+			return 1 + i;
+	}
+	return -1;
 }

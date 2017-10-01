@@ -21,6 +21,7 @@ typedef struct command_t {
 	SET_COMMAND cmd;
 	bool validArg; //is set to true if the line contains a valid argument
 	int arg;
+	char * arg2;
 } SetCommand;
 
 /**
@@ -35,4 +36,6 @@ bool equalStrings(const char* s1, const char *s2);
 SetCommand setting_parse(const char* str);
 SET_COMMAND game_settings(Game * g);
 int getNextWord(const char * s, char * word);
+bool xml_load(Game * g, char * path);
+void print_settings(Game* g);
 #endif // !SetCommand_H_

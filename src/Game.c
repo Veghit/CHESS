@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include"SetCommand.h"
+#include "SetCommand.h"
 #include "limits.h"
 
 #ifndef CONSTS
@@ -14,32 +14,25 @@ const int BLACK = 0;
 bool currentLost(Game * g) {
 	int a = 0;
 	int moves[64];
-	int king_index = -10;
-	if (g->currentPlayer == WHITE) {
-		for (a = 0; a < 64; a++) {
-			if (g->gameBoard[a / 8][a % 8] == 'k') {
-				king_index = a;
-				break;
+	int row;
+	int col;
+	for (row = 0; row < 8; row++)
+		for (col = 0; col < 8; col++) {
+			if (isColor(g->gameBoard[row][col], g->currentPlayer)) {
+				int i = getValidMoves(g, row * 8 + col, moves, 0);
+				int j;
+				for (j = 0; j < i; j++) {
+					Game * g2 = cloneGame(g);
+					if (-1 != makeMove(g2, row * 8 + col, moves[j])) {
+						deleteGame(g2);
+						return false;
+					}
+					deleteGame(g2);
+				}
+
 			}
 		}
-	} else {
-		for (a = 0; a < 64; a++) {
-			if (g->gameBoard[a / 8][a % 8] == 'K') {
-				king_index = a;
-				break;
-			}
-		}
-	}
-	int i = getValidMoves(g, king_index, moves, 0);
-	int j;
-	for (j = 0; j < i; j++) {
-		Game * g2 = cloneGame(g);
-		if (-1 != makeMove(g2, king_index, moves[j])) {
-			deleteGame(g2);
-			return false;
-		}
-		deleteGame(g2);
-	}
+
 	return true;
 }
 // it there a CHECK?
@@ -54,7 +47,7 @@ int isGameChecked(Game* g) {
 	int king = -1; // king index
 	//if the current player is white
 	if (g->currentPlayer == WHITE) {
-		for (a = 0; a < 64; a++) {// a is like the current spot on the flattened board
+		for (a = 0; a < 64; a++) {
 			// we find the location of the white king
 			if (g->gameBoard[a / 8][a % 8] == 'k') {
 				king = a;
@@ -62,14 +55,14 @@ int isGameChecked(Game* g) {
 			}
 		}
 	} else {
-		for (a = 0; a < 64; a++) {// a is like the current spot on the flattened board 
+		for (a = 0; a < 64; a++) {
 			if (g->gameBoard[a / 8][a % 8] == 'K') {
 				king = a;
 				break;
 			}
 		}
 	}
-	//we make sure the king isn't threatened by any black piece, in the spot he's currently at
+
 	if (isThreatened(g, king))
 		//if one of the possible moves is in the same index as the king's,
 		//then the king is checked
@@ -193,31 +186,38 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 	GameCommand move;
 	bool validMove = false;
 	Game * tempClone = cloneGame(g);
+	if (tempClone == NULL) {
+		return GAME_INVALID_LINE;
+	}
 	char * lastMove = (char*) calloc(100, sizeof(char));
+	if (lastMove == NULL) {
+		deleteGame(tempClone);
+		return GAME_INVALID_LINE;
+	}
 	//parses the game command string (aka moveStr) into a proper gameCommand var
-	if ((g->PLAYERS == 1) && (g->USER_COLOR != g->currentPlayer))
+	if ((g->PLAYERS == 1) && (g->USER_COLOR != g->currentPlayer)) {
 		move = pcMove(g);
-	else {
-		if (g->mode == 'c') {
-			if (g->currentPlayer == BLACK) {
-				printf("black player - enter your move:\n");
-			}
-			else {
-				printf("white player - enter your move:\n");
-			}
-			//Receives the desirable move by the user
-			if (fgets(moveStr, 1024, stdin) == 0) {
-				free(lastMove);
-				deleteGame(tempClone);
-				return GAME_QUIT;
-			}
-			move = game_parse(moveStr);
+		print_pcMove(g, move);
+	} else {
+		if (g->currentPlayer == BLACK) {
+			printf("black player - enter your move:\n");
+		} else {
+			printf("white player - enter your move:\n");
 		}
+		//Receives the desirable move by the user
+		if (fgets(moveStr, 1024, stdin) == 0) {
+			free(lastMove);
+			deleteGame(tempClone);
+			return GAME_QUIT;
+		}
+		move = game_parse(moveStr);
+	}
+	if ((move.cmd == GAME_SAVE) && move.validArg) {
+		xml_save(g, move.arg3);
 	}
 	if ((move.cmd == GAME_MOVE) || (move.cmd == GAME_CASTLE)
 			|| move.cmd == GAME_GET_MOVES) {
 		if (move.validArg) {
-
 			int row1 = move.arg1 / 8;
 			int col1 = move.arg1 % 8;
 			int row2 = move.arg2 / 8;
@@ -226,15 +226,12 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 			if ((color == WHITE && isWhite(piece))
 					|| ((color == BLACK) && isBlack(piece))) {
 				if (move.cmd == GAME_CASTLE) {
-					if (g->mode == 'c') {
-						if ((piece != 'r') && (piece != 'R')) {
-							printf("Wrong position for a rook\n");
-							move.cmd = GAME_INVALID_LINE;
-						}
+					if ((piece != 'r') && (piece != 'R')) {
+						printf("Wrong position for a rook\n");
+						move.cmd = GAME_INVALID_LINE;
 					}
 					if (canCastle(g, move.arg1) == false) {
-						if(g->mode=='c')
-							printf("Illegal castling move\n");
+						printf("Illegal castling move\n");
 						move.cmd = GAME_INVALID_LINE;
 					} else {
 						castle(g, move.arg1);
@@ -243,85 +240,150 @@ GAME_COMMAND twoPlayersGame(Game* g, char* moveStr) {
 				}
 				if (move.cmd == GAME_MOVE) {
 					if (-1 == makeMove(g, move.arg1, move.arg2)) {
-						if (g->mode == 'c')
-							printf("Illegal move\n");
+						printf("Illegal move\n");
 						move.cmd = GAME_INVALID_LINE;
+						validMove = false;
 					} else {
-						if (g->mode == 'c') {
-							if (((piece == 'M') && (row2 == 0))
+						if (((piece == 'M') && (row2 == 0))
 								|| ((piece == 'm') && (row2 == 7)))
-								pawnPromotion(g, move.arg2);
-						}
+							pawnPromotion(g, move.arg2);
 						validMove = true;
 
 					}
 				}
 				if (move.cmd == GAME_GET_MOVES) {
 					int arg = move.arg1;
-					if (g->mode == 'c')
-						printValidMoves(g, arg);
+					printValidMoves(g, arg);
 				}
 
 			} else {
-				if (g->mode == 'c')
-					printf("The specified position does not contain your piece\n");
+				printf("The specified position does not contain your piece\n");
 				move.cmd = GAME_INVALID_LINE;
 			}
 		} else {
-			if (g->mode == 'c')
-				printf("Invalid position on the board\n");
+			printf("Invalid position on the board\n");
 			move.cmd = GAME_INVALID_LINE;
 		}
 	}
-	//TODO not entirely sure if should put it under an if(g->mode=='c') or not
 	if (validMove) {
-		if (move.cmd == GAME_MOVE) {
-			if (g->currentPlayer == WHITE)
-				sprintf(lastMove,
-						"Undo move for player white : <%d,%c> -> <%d,%c>\n",
-						move.arg1 / 8, 'A' + move.arg1 % 8, move.arg2 / 8,
-						'A' + move.arg2 % 8);
-			else
-				sprintf(lastMove,
-						"Undo move for player black : <%d,%c> -> <%d,%c>\n",
-						move.arg1 / 8, 'A' + move.arg1 % 8, move.arg2 / 8,
-						'A' + move.arg2 % 8);
-		} else {
-			if (g->currentPlayer == WHITE)
-				sprintf(lastMove, "Undo castle for player white : <%d,%c>\n",
-						move.arg1 / 8, 'A' + move.arg1 % 8);
-			else
-				sprintf(lastMove, "Undo castle for player black : <%d,%c>\n",
-						move.arg1 / 8, 'A' + move.arg1 % 8);
-		}
-		free(lastMoves[5]);
-		lastMoves[5] = lastMoves[4];
-		lastMoves[4] = lastMoves[3];
-		lastMoves[3] = lastMoves[2];
-		lastMoves[2] = lastMoves[1];
-		lastMoves[1] = lastMoves[0];
-		lastMoves[0] = lastMove;
-		g->currentPlayer = 1 - g->currentPlayer;
-		if (g->currentPlayer == BLACK) {
-			if (g->saves < 3)
-				g->saves += 1;
-			deleteGame(lastGames[2]);
-			lastGames[2] = lastGames[1];
-			lastGames[1] = lastGames[0];
-			lastGames[0] = tempClone;
-		} else {
-			deleteGame(tempClone);
-		}
+		handle_undo(g, tempClone, move, lastMove);
 	} else {
 		free(lastMove);
 		deleteGame(tempClone);
 
 	}
+
 	return move.cmd;
+}
+
+void print_pcMove(Game* g, GameCommand move) {
+	char c = g->gameBoard[move.arg1 / 8][move.arg1 % 8];
+	char * name;
+	if ((c == 'k') || (c == 'K'))
+		name = "king";
+	if ((c == 'q') || (c == 'Q'))
+		name = "queen";
+	if ((c == 'n') || (c == 'N'))
+		name = "knight";
+	if ((c == 'b') || (c == 'B'))
+		name = "bishop";
+	if ((c == 'r') || (c == 'R'))
+		name = "rook";
+	if ((c == 'm') || (c == 'M'))
+		name = "pawn";
+	printf("Computer: move %s at <%d,%c> to <%d,%c>\n", name,
+			1 + (move.arg1 / 8), move.arg1 % 8 + 'A', 1 + (move.arg2 / 8),
+			move.arg2 % 8 + 'A');
+}
+
+void handle_undo(Game * g, Game * tempClone, GameCommand move, char* lastMove) {
+	if (move.cmd == GAME_MOVE) {
+		if (g->currentPlayer == WHITE)
+			sprintf(lastMove,
+					"Undo move for player white : <%d,%c> -> <%d,%c>\n",
+					1 + move.arg2 / 8, 'A' + move.arg2 % 8, 1 + move.arg1 / 8,
+					'A' + move.arg1 % 8);
+		else
+			sprintf(lastMove,
+					"Undo move for player black : <%d,%c> -> <%d,%c>\n",
+					1 + move.arg2 / 8, 'A' + move.arg2 % 8, 1 + move.arg1 / 8,
+					'A' + move.arg1 % 8);
+	} else {
+		if (g->currentPlayer == WHITE)
+			sprintf(lastMove, "Undo castle for player white : <%d,%c>\n",
+					move.arg1 / 8, 'A' + move.arg1 % 8);
+		else
+			sprintf(lastMove, "Undo castle for player black : <%d,%c>\n",
+					move.arg1 / 8, 'A' + move.arg1 % 8);
+	}
+	free(lastMoves[5]);
+	lastMoves[5] = lastMoves[4];
+	lastMoves[4] = lastMoves[3];
+	lastMoves[3] = lastMoves[2];
+	lastMoves[2] = lastMoves[1];
+	lastMoves[1] = lastMoves[0];
+	lastMoves[0] = lastMove;
+	g->currentPlayer = 1 - g->currentPlayer;
+	if (g->currentPlayer == BLACK) {
+		if (g->saves < 3)
+			g->saves += 1;
+		deleteGame(lastGames[2]);
+		lastGames[2] = lastGames[1];
+		lastGames[1] = lastGames[0];
+		lastGames[0] = tempClone;
+	} else {
+		deleteGame(tempClone);
+	}
+}
+void xml_save(Game * g, char * str) {
+
+	FILE *fp;
+	fp = fopen(str, "w");
+	if (fp == NULL)
+		printf("File cannot be created or modified\n");
+	else {
+		fputs("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n", fp);
+		fputs("<game>\n", fp);
+		fputs("\t<current_turn>", fp);
+		fputc('0' + g->currentPlayer, fp);
+		fputs("</current_turn>\n", fp);
+		fputs("\t<game_mode>", fp);
+		fputc('0' + g->PLAYERS, fp);
+		fputs("</game_mode>\n", fp);
+		if (g->PLAYERS == 1) {
+			fputs("\t<difficulty>", fp);
+			fputc('0' + g->DIFF, fp);
+			fputs("</difficulty>\n", fp);
+			fputs("\t<user_color>", fp);
+			fputc('0' + g->USER_COLOR, fp);
+			fputs("</user_color>\n", fp);
+		}
+		fputs("\t<board>\n", fp);
+		int i, j;
+		for (i = 0; i < 8; i++) {
+			fputs("\t\t<row_", fp);
+			fputc('8' - i, fp);
+			fputc('>', fp);
+			for (j = 0; j < 8; j++) {
+				fputc(g->gameBoard[7 - i][j], fp);
+			}
+			fputs("</row_", fp);
+			fputc('8' - i, fp);
+			fputs(">\n", fp);
+		}
+		fputs("\t</board>\n", fp);
+		fputs("</game>\n", fp);
+		fclose(fp);
+	}
+	//printf("FILE saved!");
 }
 
 void pawnPromotion(Game * g, int arg) {
 	char * string = (char*) calloc(1024, sizeof(char));
+	if (string == NULL) {
+		printf("ERROR in memory allocation.");
+		return;
+	}
 	char w1[30];
 
 	char piece = 0;
@@ -331,11 +393,10 @@ void pawnPromotion(Game * g, int arg) {
 	char *s4 = "bishop";
 	char *s5 = "pawn";
 	while (true) {
-		if (g->mode == 'c') {
-			printf("Pawn promotion- please replace the pawn by queen, rook, knight, bishop or pawn:\n");
-			while (fgets(string, 1024, stdin) == 0) {
-				fgets(string, 1024, stdin);
-			}
+		printf(
+				"Pawn promotion- please replace the pawn by queen, rook, knight, bishop or pawn:\n");
+		while (fgets(string, 1024, stdin) == 0) {
+			fgets(string, 1024, stdin);
 		}
 		for (int a = 0; a < 30; a++) {
 			w1[a] = 0;
@@ -353,8 +414,7 @@ void pawnPromotion(Game * g, int arg) {
 		} else if (equalStrings(w1, s5)) {
 			piece = 'm';
 		} else {
-			if (g->mode == 'c')
-				printf("Invalid Type\n");
+			printf("Invalid Type\n");
 		}
 		if (piece != 0) {
 			if (g->currentPlayer == BLACK)
@@ -374,8 +434,7 @@ void pawnPromotion(Game * g, int arg) {
 
 
  */
-void resetGame(Game * g, char mode) {
-	g->mode = mode;
+void resetGame(Game * g) {
 	g->currentPlayer = WHITE;
 	g->blackLeftCastle = true;
 	g->blackRightCastle = true;
@@ -471,6 +530,7 @@ bool canCastle(Game* g, int arg) {
 	}
 	return false;
 }
+
 int castle(Game * g, int arg) {
 	if (arg == 0) {
 		g->gameBoard[0][0] = '_';
@@ -529,7 +589,7 @@ int makeMove(Game * g, int arg1, int arg2) {
 			break;
 		}
 	}
-	if ((j<64) && (validMoves[j] == arg2)) {
+	if ((j < 64) && (validMoves[j] == arg2)) {
 		if ((arg1 == 0) || (arg2 == 0))
 			g2->whiteLeftCastle = false;
 		if ((arg1 == 7) || (arg2 == 7))
@@ -599,7 +659,7 @@ int getValidMoves(Game* g, int arg, int* moves, int i) {
 	case 'Q':
 	case 'q':
 		numMoves = appendRookMoves(g, row, col, moves, i); //rook here intentionally queen is rook+bishop
-		numMoves = appendBishopMoves(g, row, col, moves, numMoves + i); //
+		numMoves += appendBishopMoves(g, row, col, moves, numMoves + i); //
 		break;
 	case 'b':
 	case 'B':
@@ -611,6 +671,10 @@ int getValidMoves(Game* g, int arg, int* moves, int i) {
 
 void printValidMoves(Game * g, int arg) {
 	int* moves = (int*) calloc(64, sizeof(int));
+	if (moves == NULL) {
+		printf("ERROR in memory allocation.");
+		return;
+	}
 	int i = getValidMoves(g, arg, moves, 0);
 	int j;
 	int k[64];
@@ -938,8 +1002,6 @@ bool isConquerable(Game * g, int row, int col, int color) {
 		char curr = g->gameBoard[row][col];
 		if (isEmpty(g, row, col))
 			return false;
-		//if ((curr == 'K') || (curr == 'k'))
-		//	return false;
 		return !isColor(curr, color);
 	} else
 		return false;
@@ -982,8 +1044,8 @@ void printBoard(Game * g) {
 
 Game * cloneGame(Game* g) {
 	Game * g2 = (Game*) calloc(1, sizeof(Game));
-	g2->mode = g->mode;
 	g2->DIFF = g->DIFF;
+	g2->mode = g->mode;
 	g2->PLAYERS = g->PLAYERS;
 	g2->saves = g->saves;
 	g2->USER_COLOR = g->USER_COLOR;
@@ -1011,75 +1073,119 @@ GameCommand MinimaxSuggestMove(Game* g) {
 		return move;
 	}
 	if (g == NULL || maxDepth <= 0) {
-		if (g->mode == 'c')
-			printf("wrong param vals");
+		printf("wrong param vals");
 		return move;
 	}
 	Game * clone = cloneGame(g);
 	if (clone == NULL) {
-		if (g->mode == 'c')
-			printf("wrong -didnt manage to clone");
+		printf("wrong -didnt manage to clone");
 		return move;
 	}
 
 	int indexChosen[1];
 	GameCommand * chosenMove = (GameCommand*) calloc(1, sizeof(GameCommand));
-	create_Tree(clone, maxDepth, 0, indexChosen, chosenMove);
+	if (chosenMove == NULL) {
+		printf("ERROR in memory allocation.");
+		GameCommand gc;
+		gc.cmd = GAME_INVALID_LINE;
+		return gc;
+	}
+	create_Tree(clone, maxDepth, 0, indexChosen, chosenMove, INT_MIN, INT_MAX);
 	deleteGame(clone);
 	return (*chosenMove);
 
 }
 int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth,
-		int indexChosen[], GameCommand * chosenMove) {
-	//printf("***%d***", curDepth);
+		int indexChosen[], GameCommand * chosenMove, int alpha, int beta) {
+	//printf("\nDEPTH:%d\t", curDepth);
 	Game* clone;
-	int i = 0, mark = 0, startCopy = 0;
-	int arr[432];// since there r only up to 1024 moves possible for any board
 	int originalPlace = 0;
 	int goalPlace = 0;
-	if ((isGameChecked(curGame) == curGame->currentPlayer)
-			&& (currentLost(curGame))) {
-		if (curDepth % 2 == 0)
-			return INT_MIN;
-		else
-			return INT_MAX;
-	}
-	if (isGameTied(curGame))
-		return 0;
 	if (curDepth == maxDepth) {
 		int mark = calcLowest(curGame);
-		//printf("-%d-", mark);
+		//printf("SCORE:(%d)\n", mark);
 		return mark;
 	}
+
 	GameCommand * allPossibleMoves = (GameCommand*) calloc(432,
 			sizeof(GameCommand));
+	if (allPossibleMoves == NULL) {
+		printf("ERROR in memory allocation.");
+		return 0;
+	}
 	listAllMoves(curGame, allPossibleMoves);
-	int j = 0;
-	for (j = 0; j < 432; j++) {
-		if (allPossibleMoves[j].validArg == true) {
-			clone = cloneGame(curGame);
-			originalPlace = allPossibleMoves[j].arg1;
-			goalPlace = allPossibleMoves[j].arg2;
-			//printf("\n%d->%d", originalPlace, goalPlace);
-			makeMove(clone, originalPlace, goalPlace);
-			clone->currentPlayer = 1 - clone->currentPlayer;
-			arr[i++] = create_Tree(clone, maxDepth, curDepth + 1, indexChosen,
-					chosenMove);
-		} else {
-			break;
+	if (allPossibleMoves[0].validArg == false)
+		return calcLowest(curGame);
+
+	int j;
+	int tempScore;
+	int tempMove = 0;
+	int v = 0;
+	if (curGame->currentPlayer == WHITE) {
+		v = INT_MIN;
+		for (j = 0; j < 432; j++) {
+			if (allPossibleMoves[j].validArg == true) {
+				//printf("v=%d A=%d B=%d\t", v, alpha, beta);
+				clone = cloneGame(curGame);
+				originalPlace = allPossibleMoves[j].arg1;
+				goalPlace = allPossibleMoves[j].arg2;
+				//printf("\n%d => %d", originalPlace, goalPlace);
+				makeMove(clone, originalPlace, goalPlace);
+				clone->currentPlayer = 1 - clone->currentPlayer;
+				tempScore = create_Tree(clone, maxDepth, curDepth + 1,
+						indexChosen, chosenMove, alpha, beta);
+				deleteGame(clone);
+				if (tempScore > v) {
+					v = tempScore;
+					tempMove = j;
+				}
+				if (v > alpha)
+					alpha = v;
+				if (beta <= alpha) {
+					//printf("A=%d B=%d\t", alpha, beta);
+					//printf("BETA\n");
+					break;// beta cut-off
+				}
+			} else
+				break;
+		}
+	} else {
+		v = INT_MAX;
+		for (j = 0; j < 432; j++) {
+			if (allPossibleMoves[j].validArg == true) {
+				//printf("v=%d A=%d B=%d\t", v, alpha, beta);
+				clone = cloneGame(curGame);
+				originalPlace = allPossibleMoves[j].arg1;
+				goalPlace = allPossibleMoves[j].arg2;
+				//printf("\n%d => %d", originalPlace, goalPlace);
+				makeMove(clone, originalPlace, goalPlace);
+				clone->currentPlayer = 1 - clone->currentPlayer;
+				tempScore = create_Tree(clone, maxDepth, curDepth + 1,
+						indexChosen, chosenMove, alpha, beta);
+				deleteGame(clone);
+				if (tempScore < v) {
+					v = tempScore;
+					tempMove = j;
+				}
+				if (v < beta)
+					beta = v;
+				if (beta <= alpha) {
+					//printf("A=%d B=%d\t", alpha, beta);
+					//printf("ALPHA\n");
+					break;// alpha cut-off
+				}
+			} else
+				break;
 		}
 
 	}
-	deleteGame(clone);
-	if (curGame->currentPlayer == WHITE) {
-		mark = maxElem(arr, j, indexChosen);
-	} else {
-		mark = minElem(arr, j, indexChosen);
-	}
-	startCopy = indexChosen[0];
-	*chosenMove = allPossibleMoves[startCopy];
-	return mark;
+	*chosenMove = allPossibleMoves[tempMove];
+	//printf("\nCHOSEN: %d => %d SCORE:%d\n", allPossibleMoves[tempMove].arg1,
+	//		allPossibleMoves[tempMove].arg2, v);
+	return v;
 }
+
+//list all possoble moves for the current player. That is, legal moves not ending in check for himself.
 
 void listAllMoves(Game* g, GameCommand allPossibleMoves[]) {
 	int index = 0;
@@ -1088,19 +1194,29 @@ void listAllMoves(Game* g, GameCommand allPossibleMoves[]) {
 	for (int i = 0; i < 64; i++) {
 		char piece = g->gameBoard[i / 8][i % 8];
 		if ((piece != '_') && (getColor(piece) == g->currentPlayer)) {
-			numMoves = getValidMoves(g, i, movesArr, index);
+			numMoves = getValidMoves(g, i, movesArr, 0);
 			int j = 0;
 			for (j = 0; j < numMoves; j++) {
 				GameCommand move;
 				move.cmd = GAME_MOVE;
 				move.arg1 = i;
-				move.arg2 = movesArr[index];
+				move.arg2 = movesArr[j];
 				move.validArg = true;
-				allPossibleMoves[index] = move;
-				index++;
+				Game* testGame = cloneGame(g); //need to test if move is legal
+				if (-1 != makeMove(testGame, move.arg1, move.arg2)) {
+					allPossibleMoves[index] = move;
+					index++;
+				}
+				deleteGame(testGame);
 			}
 		}
 	}
+	GameCommand move;
+	move.cmd = GAME_MOVE;
+	move.arg1 = 0;
+	move.arg2 = 0;
+	move.validArg = false;
+	allPossibleMoves[index] = move;
 }
 
 void printIntArr(int* arr, int len) {
@@ -1138,6 +1254,14 @@ void initializeSpecial(int* arr, int length, int jump) {
 
  */
 int calcLowest(Game* g) {
+	if ((isGameChecked(g) == g->currentPlayer) && (currentLost(g))) {
+		if (g->currentPlayer == WHITE)
+			return INT_MIN;
+		else
+			return INT_MAX;
+	}
+	if (isGameTied(g))
+		return 0;
 	int evalWHITE = 0;
 	int evalBLACK = 0;
 	char cur = 'c';
@@ -1159,9 +1283,9 @@ int calcLowest(Game* g) {
 			case 'Q':
 				evalBLACK += 9;
 				break;
-			case 'K':
-				evalBLACK += 100;
-				break;
+				//case 'K': there are always two kings in a legal game
+				//	evalBLACK += 100;
+				//	break;
 			case 'm':
 				evalWHITE++;
 				break;
@@ -1175,9 +1299,9 @@ int calcLowest(Game* g) {
 			case 'q':
 				evalWHITE += 9;
 				break;
-			case 'k':
-				evalWHITE += 100;
-				break;
+				//case 'k':
+				//	evalWHITE += 100;
+				//	break;
 			}
 		}
 
@@ -1185,25 +1309,24 @@ int calcLowest(Game* g) {
 
 	return evalWHITE - evalBLACK;
 }
-
-int maxElem(int* arr, int length, int indexChosen[]) {
-	int temp = INT_MIN;
-	for (int i = 0; i < length; i++) {
-		if (arr[i] > temp) {
-			indexChosen[0] = i;
-			temp = arr[i];
-		}
+/*
+@param g- existing game with existing settings
+keeps all the initial settings and resets everything else*/
+void restartGame(Game*g) {
+	char board[64]= { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r', 'm', 'm', 'm', 'm',
+		'm', 'm', 'm', 'm', '_', '_', '_', '_', '_', '_', '_', '_', '_',
+		'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_', '_',
+		'_', '_', '_', '_', '_', '_', '_', '_', '_', '_', 'M', 'M', 'M',
+		'M', 'M', 'M', 'M', 'M', 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R', };
+	for (int x = 0; x <= 63; x++) {
+		g->gameBoard[x / 8][x % 8] = board[x];
 	}
-	return temp;
-}
+	g->blackLeftCastle = true;
+	g->blackRightCastle = true;
+	g->whiteLeftCastle = true;
+	g->whiteRightCastle = true;
+	g->saves = 0;
+	g->currentPlayer = WHITE;
 
-int minElem(int* arr, int length, int indexChosen[]) {
-	int temp = INT_MAX;
-	for (int i = 0; i < length; i++)
-		if (arr[i] < temp) {
-			indexChosen[0] = i;
-			temp = arr[i];
-		}
-	return temp;
 }
 
