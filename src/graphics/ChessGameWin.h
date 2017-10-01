@@ -71,6 +71,12 @@ int isClickOnUndo(int x, int y);
 int isClickOnMainMenu(int x, int y);
 int isClickOnExitFromGame(int x, int y);
 /*other helpful funcs*/
+void createBlackCouple(GameWin* res, SDL_Surface* loadingSurface);
+void createWhiteCouple(GameWin* res, SDL_Surface* loadingSurface);
+void createBlackPieces(GameWin* res, SDL_Surface* loadingSurface);
+void createWhitePieces(GameWin* res, SDL_Surface* loadingSurface);
+void createGameButtonsTextures(GameWin* res, SDL_Surface* loadingSurface);
+void createGameToMainMenuButtons(GameWin* res, SDL_Surface* loadingSurface);
 void nullifyHelpingArrays(int arr[], int length, char arr2[], int arr2Len);
 void backToMainMenu(Game* g);
 

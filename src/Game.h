@@ -273,7 +273,7 @@ GameCommand pcMove(Game* g);
 
 GameCommand MinimaxSuggestMove(Game* g);
 
-int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth,
+int create_Tree(Game* curGame,int maxDepth, int curDepth,
 		int indexChosen[], GameCommand* chosenMove, int alpha, int beta);
 
 void intializeRest(char arr[][17], int len, int size, char* str);
