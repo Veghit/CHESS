@@ -38,7 +38,6 @@ void fixGui() {
 		if (ManagerHandleEvent(manager, &event, g) == MANAGER_QUTT) {
 			break;
 		}
-		//TODO sapir, how can i receive an event before i draw?
 		ManagerDraw(manager, g);
 	}
 	ManagerDestroy(manager);

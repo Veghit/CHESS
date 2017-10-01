@@ -375,7 +375,6 @@ void xml_save(Game * g, char * str) {
 		fputs("</game>\n", fp);
 		fclose(fp);
 	}
-	//printf("FILE saved!");
 }
 
 void pawnPromotion(Game * g, int arg) {

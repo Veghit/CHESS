@@ -3,61 +3,38 @@
 #include <stdio.h>
 
 int isClickOnRestart(int x, int y) {
-
 	if ((x >= 600 && x <= 700) && (y >= 10 && y <= 80))
-
 		return 1;
-
 	return 0;
-
 }
 
 int isClickOnSave(int x, int y) {
-
 	if ((x >= 600 && x <= 700) && (y >= 112 && y <= 182))
-
 		return 1;
-
 	return 0;
-
 }
 
 int isClickOnLoadFromGame(int x, int y) {
-
 	if ((x >= 600 && x <= 700) && (y >= 214 && y <= 284))
-
 		return 1;
-
 	return 0;
-
 }
 
 int isClickOnUndo(int x, int y) {
-
 	if ((x >= 600 && x <= 700) && (y >= 316 && y <= 386))
-
 		return 1;
-
 	return 0;
-
 }
 
 int isClickOnMainMenu(int x, int y) {
-
 	if ((x >= 600 && x <= 700) && (y >= 418 && y <= 488))
-
 		return 1;
-
 	return 0;
-
 }
 
 int isClickOnExitFromGame(int x, int y) {
-
 	if ((x >= 600 && x <= 700) && (y >= 520 && y <= 590))
-
 		return 1;
-
 	return 0;
 
 }
@@ -228,11 +205,6 @@ GameWin* GameWindowCreate() {
 		return NULL;
 	}
 
-	//TODO for all the following pieces texture,
-	//the bg becomes invisible only if the original bg color was magneta
-	//hence, once i find good enough picture pieces, i need to adjust the 
-	//setColorKey/ mapRGB (at least one of them, probably)
-	//We use SetColorKey to make texture background transparent
 
 	SDL_SetColorKey(loadingSurface, SDL_TRUE,
 			SDL_MapRGB(loadingSurface->format, 255, 255, 255));
@@ -569,12 +541,7 @@ void GameWindowDraw(GameWin* src, int draggedOriginsCurDest[],
 	if (src == NULL) {
 		return;
 	}
-	//TODO, again, originally were 600, changed both
-	//so here, in contrast to how i theoretically tried to make MainWindow bg work,
-	//they made it work like this
-	//but when i changed the height and width, it changed too, in a weird way.
-	//however, only because the original didnt match the size of the change
-	//then again, i'd have to adjust the places of the pieces, apparently, anyway.
+
 	SDL_Rect rec = { .x = 0, .y = 0, .w = 900, .h = 608 };
 	SDL_Rect recRestart = { .x = 600, .y = 10, .w = 100, .h = 70 };
 	SDL_Rect recSave = { .x = 600, .y = 112, .w = 100, .h = 70 };
@@ -600,7 +567,7 @@ void GameWindowDraw(GameWin* src, int draggedOriginsCurDest[],
 	 in the gui mode*/
 	int i = 0, j = 0;
 	for (i = 0; i < 8; i++) { //TODO CHANGED N_ROWS AND N_COLUMNS into 8
-		for (j = 0; j < 8; j++) { // בהתאמה
+		for (j = 0; j < 8; j++) {
 			/*TODO i need to make adjustments to the origins, curs and dests 
 			 so they'd actually match the i and j on a console board*/
 			rec.h = 71;
@@ -620,7 +587,8 @@ void GameWindowDraw(GameWin* src, int draggedOriginsCurDest[],
 					rec.x = draggedOriginsCurDest[5];
 					rec.y = draggedOriginsCurDest[6];
 					draggedOriginsCurDest[5] = -1;
-					draggedOriginsCurDest[6] = -1;		
+					draggedOriginsCurDest[6] = -1;
+					
 				}
 				
 			}
@@ -746,6 +714,7 @@ GAME_EVENT GameWindowHandleEvent(GameWin* src, SDL_Event* event,
 							else
 								SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "watch it!", "black king is checked", NULL);
 						}
+
 					}
 					if (g->PLAYERS == 1 && (g->USER_COLOR != g->currentPlayer)) {
 						GameCommand move = pcMove(g);
