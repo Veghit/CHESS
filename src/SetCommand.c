@@ -204,7 +204,7 @@ bool xml_tag(char* tag, char*s) {
 
 bool xml_load(Game * g, char * path) {
 	FILE *fp;
-	bool valid = true;
+	bool valid = false;
 	fp = fopen(path, "r");
 	if (fp == NULL)
 		return false;
@@ -260,6 +260,8 @@ bool xml_load(Game * g, char * path) {
 
 				}
 			}
+			if (i == j && i == 8)
+				valid = true;
 		}
 	}
 	fclose(fp);

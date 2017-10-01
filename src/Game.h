@@ -110,15 +110,20 @@ void deleteGame(Game* g);
 
  */
 int getValidMoves(Game* g, int arg, int* validMoves, int i);
-
+/**
+@param g- the game
+@param arg- a piece in the game
+simply prints all the valid moves for arg in g*/
 void printValidMoves(Game * g, int arg);
 /**
  @param g- the current game
- @param arg1-
- @param arg2-
- @ret-
+ @param arg1- the current place of the piece in the game
+ @param arg2- the wannabe destined place of the piece in the game
+ @ret- -1 if the move is possible and good/ not illegal,
+ a different int, otherwise
+ and moves piece to desired location
 
- */ //TODO
+ */
 int makeMove(Game * g, int arg1, int arg2);
 /**
  @param g- current game
@@ -246,14 +251,31 @@ bool isConquerable(Game * g, int row, int col, int color);
 
  */
 bool isEmptyOrConquerable(Game* g, int row, int col, int color);
-
+/**
+@param g- the game
+@param arg- a piece in the game
+@ret- true if arg is threatened and false otherwise*/
 bool isThreatened(Game * g, int arg);
-
+/**
+@param g- the game
+@param arg- the place of the rook that is to castle the king
+if the player wanted to castle, 
+returns 4 if the castling of the white was possible
+or 60 if the castling of the black was possible*/
 int castle(Game * g, int arg);
+/**
+@param g- the game
+deletes all allocated memory for the game*/
 void deleteGame(Game* g);
+/**
+
+@param g- game
+@param arg- the place of the rook
+returns true if the rook can castle the king
+false otherwise*/
+
 bool canCastle(Game* g, int arg);
-void printValidMoves(Game * g, int arg);
-bool isThreatened(Game * g, int arg);
+
 int getColor(char c);
 void pawnPromotion(Game * g, int arg);
 
@@ -263,21 +285,28 @@ void pawnPromotion(Game * g, int arg);
 /*
  FROM HERE NEED TO MAKE/ COMPLETE/ CORRECT*/
 /**
- @param g- the current game
- @param moveStr- regularly an empty string in the length of 1024
- @ret-
+@param g- the current game
+@param moveStr- regularly an empty string in the length of 1024
+@ret- GAME_COMMAND of the move that was made, if made correctly,
+otherwise, returns a GAME_COMMAND type according to the validity of the move that was to be made
+
  */
 GAME_COMMAND twoPlayersGame(Game* g, char* moveStr);
 int exit_game(Game* g, char* moveStr);
+/*@param g- game
+@param move- game command of most recent move
+prints the last move of pc*/
 GameCommand pcMove(Game* g);
-
+//TODO finish doc
 GameCommand MinimaxSuggestMove(Game* g);
 
-int create_Tree(Game* curGame, unsigned int maxDepth, int curDepth,
+int create_Tree(Game* curGame,int maxDepth, int curDepth,
 		int indexChosen[], GameCommand* chosenMove, int alpha, int beta);
 
 void intializeRest(char arr[][17], int len, int size, char* str);
-
+/*
+@param g- existing game with existing settings
+keeps all the initial settings and resets everything else*/
 void restartGame(Game*g);
 
 void listAllMoves(Game* g, GameCommand allPossibleMoves[]);

@@ -7,38 +7,26 @@
 
 void fixGui() {
 	/*Returns 0 on success or a negative error code on failure;*/
-	printf("entered fixGui\n");
+	//printf("entered fixGui\n");
 	Game * g = (Game*) calloc(1, sizeof(Game));
 	g->mode = 'g';
 	resetGame(g);
 
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) { //SDL2 INIT
 		printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
-		/*Use this function to retrieve a message about the last error that occurred.
-		 an empty string if there hasn't been an error message set,
-		 since the last call to this func */
-		printf("entereed 	if (SDL_Init(SDL_INIT_VIDEO) < 0) \n ");
 		return;
 	}
 	GuiManager* manager = ManagerCreate();
 	if (manager == NULL) {
-		/*clean up all initialized subsystems.
-		 should call this function even if you have already shutdown each initialized subsystem,
-		 with SDL_QuitSubSystem().
-		 It is safe to call this function even in the case of errors in initialization.*/
 		SDL_Quit();
-		printf("entered if (manager == NULL)");
 		return;
 	}
 	SDL_Event event;
 	while (true) {
-		/*Use this function to wait indefinitely for the next available event.
-		 Returns 1 on success or 0 if there was an error while waiting for events*/
 		SDL_WaitEvent(&event);
-		if (ManagerHandleEvent(manager, &event, g) == MANAGER_QUTT) {
+		if (ManagerHandleEvent(manager, &event, g) == MANAGER_QUIT) {
 			break;
 		}
-		//TODO sapir, how can i receive an event before i draw?
 		ManagerDraw(manager, g);
 	}
 	ManagerDestroy(manager);
@@ -60,9 +48,7 @@ int main(int argc, char *argv[]) {
 		fixGui();
 		return 0;
 	}
-	/**
-	 initializing a new game
-	 */
+	/*initializing a new game */
 	char * moveStr = (char*) calloc(1024, sizeof(char));
 	if (moveStr == NULL) {
 		printf("ERROR in memory allocation.");
@@ -76,10 +62,6 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 	resetGame(g);
-	/**
-	 finished initializing new game
-	 starting to actually make the game run
-	 */
 	while (true) {
 		// first of all receives/ checks the game/set command. if it is to quit, then quits.
 		if ((gameCmd == GAME_QUIT) || (setCmd == SET_QUIT)) {
@@ -121,7 +103,6 @@ int main(int argc, char *argv[]) {
 						if(g->PLAYERS==2 || g->USER_COLOR == g->currentPlayer)
 							printf("Check: black King is threatened!\n");
 				}
-
 			}
 			if ((gameCmd == GAME_MOVE)
 					&& ((g->PLAYERS == 2) || (g->currentPlayer == g->USER_COLOR)))
