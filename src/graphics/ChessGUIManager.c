@@ -145,6 +145,8 @@ MANAGER_EVENET handleManagerDueToLoadEvent(GuiManager* src, LOAD_EVENT event,
 		if (loadGameFromSlot(loadedGame, 1,src)) {
 			deleteGame(g);
 			g = cloneGame(loadedGame);
+			if (g == NULL)
+				printf("too bad\n");
 		} else {
 			printf("ERROR: BAD FILE");
 			return MANAGER_QUTT;
@@ -154,6 +156,8 @@ MANAGER_EVENET handleManagerDueToLoadEvent(GuiManager* src, LOAD_EVENT event,
 		if (loadGameFromSlot(loadedGame, 2,src)) {
 			deleteGame(g);
 			g = cloneGame(loadedGame);
+			if (g == NULL)
+				printf("too bad\n");
 		} else {
 			printf("ERROR: BAD FILE");
 			return MANAGER_QUTT;
@@ -163,6 +167,8 @@ MANAGER_EVENET handleManagerDueToLoadEvent(GuiManager* src, LOAD_EVENT event,
 		if (loadGameFromSlot(loadedGame, 3,src)) {
 			deleteGame(g);
 			g = cloneGame(loadedGame);
+			if (g == NULL)
+				printf("too bad\n");
 		} else {
 			printf("ERROR: BAD FILE");
 			return MANAGER_QUTT;
@@ -172,6 +178,8 @@ MANAGER_EVENET handleManagerDueToLoadEvent(GuiManager* src, LOAD_EVENT event,
 		if (loadGameFromSlot(loadedGame, 4,src)) {
 			deleteGame(g);
 			g = cloneGame(loadedGame);
+			if (g == NULL)
+				printf("too bad\n");
 		} else {
 			printf("ERROR: BAD FILE");
 			return MANAGER_QUTT;
@@ -181,6 +189,8 @@ MANAGER_EVENET handleManagerDueToLoadEvent(GuiManager* src, LOAD_EVENT event,
 		if (loadGameFromSlot(loadedGame, 5,src)) {
 			deleteGame(g);
 			g = cloneGame(loadedGame);
+			if (g == NULL)
+				printf("too bad\n");
 		} else {
 			printf("ERROR: BAD FILE");
 			return MANAGER_QUTT;
@@ -212,8 +222,7 @@ void saveGameInSlot(Game * g, GuiManager * src) {
 		src->nextSave += 1;
 }
 
-MANAGER_EVENET handleManagerDueToGameEvent(GuiManager* src, GAME_EVENT event,
-		Game * g) {
+MANAGER_EVENET handleManagerDueToGameEvent(GuiManager* src, GAME_EVENT event, Game * g) {
 	if ((src == NULL) || (event == GAME_EVENT_NONE))
 		return MANAGER_NONE;
 
@@ -244,7 +253,7 @@ MANAGER_EVENET handleManagerDueToGameEvent(GuiManager* src, GAME_EVENT event,
 	if (event == GAME_EVENT_PIECE_CHOSEN) {
 		return MANAGER_NONE;
 	}
-	/*SO FROM HERE KINDA TAKES CARE OF MAIN MENU BUTTON AS WELL*/
+
 	if (event == GAME_EVENT_LOAD) {
 		src->loadWin = loadWindowCreate();
 		if (src->loadWin == NULL) {

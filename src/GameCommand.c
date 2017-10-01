@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "SetCommand.h"
-#include "GameCommand.h"
+
 
 /**
  @param str- receives a line
